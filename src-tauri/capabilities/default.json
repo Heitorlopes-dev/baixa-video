@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Janela principal: roda o yt-dlp como sidecar, escolhe pasta e abre o arquivo baixado",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "dialog:default",
+    "shell:allow-kill",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [{ "name": "binaries/yt-dlp", "sidecar": true, "args": true }]
+    }
+  ]
+}
