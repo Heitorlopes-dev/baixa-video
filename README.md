@@ -25,8 +25,29 @@ bun run tauri dev       # abre o app (precisa do Rust e, no Linux, do webkit2gtk
 bun run ok              # tipos, testes e build do front
 ```
 
-O instalador para Windows é gerado pelo GitHub Actions (`.github/workflows/build.yml`)
-num runner Windows:
+### Gerar o instalador Windows neste Linux
+
+Testado no Ubuntu. Pré-requisitos, uma vez só:
+
+```bash
+sudo apt install -y nsis llvm lld clang libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev build-essential pkg-config libssl-dev
+cargo install cargo-xwin --locked
+```
+
+Depois:
+
+```bash
+bun run sidecars x86_64-pc-windows-msvc   # yt-dlp.exe, ffmpeg.exe, ffprobe.exe, deno.exe
+bun run build:win                         # cargo-xwin compila para Windows; na 1ª vez baixa o SDK (1,5 GB)
+```
+
+O instalador sai em `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`.
+Ele não é assinado: o Windows SmartScreen avisa "editor desconhecido" na primeira
+execução, e a pessoa clica em "Mais informações" e "Executar assim mesmo".
+
+### Gerar pelo GitHub Actions
+
+O mesmo instalador sai do workflow `.github/workflows/build.yml` num runner Windows:
 
 - `git tag v0.1.0 && git push --tags` → cria a Release com o `.exe` anexado.
 - Rodar o workflow à mão pela aba Actions → o `.exe` fica como artefato do job.

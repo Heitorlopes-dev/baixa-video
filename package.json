@@ -11,7 +11,8 @@
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "sidecars": "bash scripts/fetch-sidecars.sh",
-    "ok": "bun run check-types && bun test && vite build"
+    "ok": "bun run check-types && bun test && vite build",
+    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
