@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useInstallUpdate, useUpdateCheck } from "./hooks/useUpdater";
+import { useInstallUpdate, useUpdateCheck } from "../hooks/useUpdater";
+import { Button } from "./ui/Button";
 
 type Props = {
   /** Download em andamento: instalar agora fecharia o app no meio dele. */
@@ -22,15 +23,15 @@ export function UpdateBanner({ disabled }: Props) {
       <div className="flex items-center gap-3">
         <span className="flex-1">{label}</span>
         {!install.isPending && (
-          <button
-            type="button"
-            className="rounded-md bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          <Button
+            variant="primary"
+            size="sm"
             disabled={disabled}
             title={disabled ? "Espere o download terminar" : undefined}
             onClick={() => install.mutate(update)}
           >
             Atualizar agora
-          </button>
+          </Button>
         )}
       </div>
       {install.isError && (

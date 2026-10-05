@@ -7,6 +7,7 @@ import {
   initialState,
   isBusy,
   isDownloading,
+  readyFile,
 } from "./download";
 
 const run = (events: DownloadEvent[], from: DownloadState = initialState) => events.reduce(downloadReducer, from);
@@ -164,5 +165,15 @@ describe("falhas e log", () => {
       antes,
     );
     expect(antes).toEqual(copia);
+  });
+});
+
+describe("readyFile", () => {
+  test("só existe arquivo para abrir depois de concluído", () => {
+    const comArquivo = run([{ type: "download-start" }, out("ARQUIVO::/x/a.mp4")]);
+    expect(readyFile(comArquivo)).toBeNull();
+    expect(readyFile(run([{ type: "exit", code: 0 }], comArquivo))).toBe("/x/a.mp4");
+    expect(readyFile(run([{ type: "exit", code: 1 }], comArquivo))).toBeNull();
+    expect(readyFile(run([{ type: "download-start" }, { type: "exit", code: 0 }]))).toBeNull();
   });
 });

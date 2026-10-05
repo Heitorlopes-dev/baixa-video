@@ -66,6 +66,11 @@ export function isBusy(state: DownloadState): boolean {
   return STATUS_RULES[state.status].busy;
 }
 
+/** Caminho do arquivo pronto para abrir na pasta: só quando o download terminou e o yt-dlp informou onde salvou. */
+export function readyFile(state: DownloadState): string | null {
+  return state.status === "concluido" ? state.filePath : null;
+}
+
 function appendLog(log: readonly string[], line: string): readonly string[] {
   return log.length >= MAX_LOG ? [...log.slice(log.length - MAX_LOG + 1), line] : [...log, line];
 }
