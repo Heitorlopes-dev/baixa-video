@@ -10,6 +10,8 @@ Stack: Tauri 2 (Rust mínimo) + React + TypeScript + Tailwind, gerenciado com Bu
 
 ## Para quem vai usar
 
+**Windows**
+
 1. Baixe o instalador `.exe` na aba Releases do repositório.
 2. Instale (não pede administrador; vai para a pasta do usuário).
 3. Cole o link, escolha a pasta e o formato, clique em **Baixar**.
@@ -19,6 +21,17 @@ Stack: Tauri 2 (Rust mínimo) + React + TypeScript + Tailwind, gerenciado com Bu
    Clique em **Atualizar agora**: ele baixa, instala e abre a versão nova.
    (Quem tem a 0.1.0 precisa instalar a próxima à mão uma vez: a atualização
    automática chegou depois dela.)
+
+**Linux**
+
+1. Baixe o `Baixa-Video_<versão>_amd64.AppImage` na aba Releases.
+2. Dê permissão de execução (botão direito, Propriedades, "Permitir executar como
+   programa") ou rode `chmod +x Baixa-Video_*.AppImage`.
+3. Dois cliques para abrir. Se a distribuição reclamar de FUSE, instale o pacote
+   `libfuse2` (no Ubuntu 24.04 ou mais novo: `libfuse2t64`).
+4. O AppImage se atualiza pela mesma faixa azul. Ele não tem o botão "Atualizar
+   yt-dlp": lá dentro os arquivos são só de leitura, e o yt-dlp novo chega com a
+   atualização do app.
 
 ## Para quem vai mexer no código
 
@@ -53,9 +66,26 @@ chave privada (veja abaixo). O instalador sai em
 Ele não é assinado: o Windows SmartScreen avisa "editor desconhecido" na primeira
 execução, e a pessoa clica em "Mais informações" e "Executar assim mesmo".
 
+### Gerar o AppImage neste Linux
+
+```bash
+sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+bun run sidecars x86_64-unknown-linux-gnu
+export TAURI_SIGNING_PRIVATE_KEY=~/.tauri/baixa-video.key
+read -rs TAURI_SIGNING_PRIVATE_KEY_PASSWORD && export TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+bun run build:linux
+```
+
+Sai em `src-tauri/target/release/bundle/appimage/`. O AppImage exige como mínimo a
+glibc da máquina que compilou; o oficial sai do Ubuntu 22.04 no Actions para rodar
+em mais distribuições. Para testar sem a chave, desligue os artefatos assinados só
+naquele build: `bun run build:linux --config '{"bundle":{"createUpdaterArtifacts":false}}'`.
+
 ### Gerar pelo GitHub Actions
 
-O mesmo instalador sai do workflow `.github/workflows/build.yml` num runner Windows:
+Os instaladores oficiais saem do workflow `.github/workflows/build.yml`: um job no
+Windows (`.exe`), um no Ubuntu 22.04 (AppImage) e um terceiro que junta as duas
+plataformas no `latest.json` (`scripts/release-manifest.ts`) e publica:
 
 - `git tag v0.1.0 && git push --tags` → cria a Release com o `.exe` anexado.
 - Rodar o workflow à mão pela aba Actions → o `.exe` fica como artefato do job.
@@ -73,9 +103,10 @@ só é aceito se a assinatura bater com a chave pública que está no `tauri.con
   pessoa precisa reinstalar à mão uma vez com uma chave nova.
 - **Lançar uma versão**: suba `version` em `src-tauri/tauri.conf.json` (e, para manter em dia,
   em `package.json` e `src-tauri/Cargo.toml`), faça o merge na `main` e crie a tag com a
-  mesma versão: `git tag v0.2.0 && git push --tags`. O workflow monta o instalador assinado
-  e o `latest.json` (`scripts/release-files.ts`) e publica os dois na Release. Se a tag não
-  bater com a versão, o workflow falha antes de publicar.
+  mesma versão: `git tag v0.3.0 && git push origin v0.3.0`. O workflow monta o `.exe` e o
+  AppImage assinados (`scripts/release-files.ts`), junta as duas plataformas no `latest.json`
+  (`scripts/release-manifest.ts`) e publica tudo na Release. Se a tag não bater com a versão,
+  ou se faltar o instalador de alguma plataforma, o workflow falha antes de publicar.
 
 ## Como funciona
 

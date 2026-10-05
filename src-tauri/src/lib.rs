@@ -38,6 +38,14 @@ fn kill_tree(pid: u32) -> Result<(), String> {
     Ok(())
 }
 
+/// Rodando de dentro de um AppImage? Lá os sidecars ficam num sistema de arquivos
+/// só de leitura, então `yt-dlp -U` sempre falharia; o yt-dlp novo vem com a
+/// atualização do app.
+#[tauri::command]
+fn is_appimage() -> bool {
+    std::env::var_os("APPIMAGE").is_some()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -46,7 +54,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![bin_dir, kill_tree])
+        .invoke_handler(tauri::generate_handler![bin_dir, kill_tree, is_appimage])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

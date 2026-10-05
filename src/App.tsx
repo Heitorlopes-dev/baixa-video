@@ -17,6 +17,7 @@ import {
   type FormatId,
 } from "./lib/ytdlp";
 import { UpdateBanner } from "./UpdateBanner";
+import { useCanUpdateYtDlp } from "./hooks/useUpdater";
 
 type Status = "parado" | "baixando" | "convertendo" | "concluido" | "erro" | "cancelado" | "atualizando";
 
@@ -37,6 +38,7 @@ export function App() {
   const childRef = useRef<Child | null>(null);
   const cancelledRef = useRef(false);
   const logRef = useRef<HTMLPreElement>(null);
+  const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
 
   useEffect(() => {
     downloadDir()
@@ -268,14 +270,16 @@ export function App() {
           >
             {showLog ? "Esconder detalhes" : "Mostrar detalhes"}
           </button>
-          <button
-            type="button"
-            className="text-sm underline opacity-70 hover:opacity-100 disabled:opacity-40"
-            disabled={busy}
-            onClick={() => void updateYtDlp()}
-          >
-            Atualizar yt-dlp
-          </button>
+          {canUpdateYtDlp && (
+            <button
+              type="button"
+              className="text-sm underline opacity-70 hover:opacity-100 disabled:opacity-40"
+              disabled={busy}
+              onClick={() => void updateYtDlp()}
+            >
+              Atualizar yt-dlp
+            </button>
+          )}
         </div>
         {showLog && (
           <pre

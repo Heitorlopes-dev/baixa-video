@@ -1,25 +1,43 @@
 import { describe, expect, test } from "bun:test";
 import conf from "../../src-tauri/tauri.conf.json";
-import { PLATFORM, assetName, tagMatchesVersion, updaterManifest } from "./release";
+import { PLATFORM_IDS, assetName, isPlatform, tagMatchesVersion, updaterManifest } from "./release";
 
 describe("updaterManifest", () => {
-  test("aponta para o instalador da Release da mesma versão, com a assinatura limpa", () => {
-    const m = updaterManifest({
-      version: "0.2.0",
-      repo: "Heitorlopes-dev/baixa-video",
-      signature: "  assinatura-base64\n",
-      pubDate: "2026-10-05T12:00:00Z",
-    });
-    expect(m.version).toBe("0.2.0");
-    expect(m.pub_date).toBe("2026-10-05T12:00:00Z");
-    expect(m.platforms[PLATFORM].signature).toBe("assinatura-base64");
-    expect(m.platforms[PLATFORM].url).toBe(
-      "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.2.0/Baixa-Video_0.2.0_x64-setup.exe",
-    );
+  const m = updaterManifest({
+    version: "0.3.0",
+    repo: "Heitorlopes-dev/baixa-video",
+    signatures: { "windows-x86_64": "  sig-win\n", "linux-x86_64": "sig-linux\n" },
+    pubDate: "2026-10-05T12:00:00Z",
   });
 
-  test("o nome do instalador não tem espaço", () => {
-    expect(assetName("1.0.0")).not.toContain(" ");
+  test("tem a versão, a data e uma entrada por plataforma publicada", () => {
+    expect(m.version).toBe("0.3.0");
+    expect(m.pub_date).toBe("2026-10-05T12:00:00Z");
+    expect(Object.keys(m.platforms).sort()).toEqual(["linux-x86_64", "windows-x86_64"]);
+  });
+
+  test("cada plataforma aponta para o seu instalador na Release da mesma versão, com a assinatura limpa", () => {
+    expect(m.platforms["windows-x86_64"]).toEqual({
+      signature: "sig-win",
+      url: "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.3.0/Baixa-Video_0.3.0_x64-setup.exe",
+    });
+    expect(m.platforms["linux-x86_64"]).toEqual({
+      signature: "sig-linux",
+      url: "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.3.0/Baixa-Video_0.3.0_amd64.AppImage",
+    });
+  });
+
+  test("nenhum nome de instalador tem espaço", () => {
+    for (const p of PLATFORM_IDS) expect(assetName(p, "1.0.0")).not.toContain(" ");
+  });
+});
+
+describe("isPlatform", () => {
+  test("aceita só as plataformas publicadas", () => {
+    expect(isPlatform("linux-x86_64")).toBe(true);
+    expect(isPlatform("windows-x86_64")).toBe(true);
+    expect(isPlatform("darwin-aarch64")).toBe(false);
+    expect(isPlatform("toString")).toBe(false);
   });
 });
 
@@ -31,9 +49,13 @@ describe("tagMatchesVersion", () => {
   });
 });
 
-describe("configuração do updater (tauri.conf.json)", () => {
-  test("gera os artefatos assinados e consulta o latest.json da última Release deste repositório", () => {
+describe("configuração do bundle e do updater (tauri.conf.json)", () => {
+  test("gera instalador Windows e AppImage, com os artefatos assinados", () => {
+    expect(conf.bundle.targets).toEqual(["nsis", "appimage"]);
     expect(conf.bundle.createUpdaterArtifacts).toBe(true);
+  });
+
+  test("consulta o latest.json da última Release deste repositório", () => {
     expect(conf.plugins.updater.endpoints).toEqual([
       "https://github.com/Heitorlopes-dev/baixa-video/releases/latest/download/latest.json",
     ]);

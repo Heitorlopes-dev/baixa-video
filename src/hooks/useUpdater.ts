@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
@@ -33,5 +34,18 @@ export function useInstallUpdate(onProgress: (percent: number | null) => void) {
       });
       await relaunch();
     },
+  });
+}
+
+/**
+ * Se o botão "Atualizar yt-dlp" pode funcionar. No AppImage não pode: o yt-dlp
+ * fica num sistema de arquivos só de leitura e chega novo junto com o app.
+ */
+export function useCanUpdateYtDlp() {
+  return useQuery({
+    queryKey: ["can-update-ytdlp"],
+    queryFn: async () => !(await invoke<boolean>("is_appimage")),
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }

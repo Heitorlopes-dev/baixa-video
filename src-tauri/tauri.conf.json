@@ -27,7 +27,8 @@
   "bundle": {
     "active": true,
     "targets": [
-      "nsis"
+      "nsis",
+      "appimage"
     ],
     "externalBin": [
       "binaries/yt-dlp",

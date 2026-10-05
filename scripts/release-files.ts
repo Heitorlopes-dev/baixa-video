@@ -1,50 +1,41 @@
-// Depois do `tauri build`: copia o instalador assinado para release/ com nome fixo
-// e escreve release/latest.json, que o app instalado consulta para se atualizar.
-// Uso: bun scripts/release-files.ts [dono/repositorio]   (no CI, vem de GITHUB_REPOSITORY)
+// Depois do `tauri build` de UMA plataforma: copia o instalador assinado e o .sig
+// para release/ com nome fixo. O job de publicação junta as plataformas e gera
+// o latest.json (scripts/release-manifest.ts).
+// Uso: bun scripts/release-files.ts <windows-x86_64|linux-x86_64>
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import conf from "../src-tauri/tauri.conf.json";
-import { assetName, tagMatchesVersion, updaterManifest } from "../src/lib/release";
+import { PLATFORMS, PLATFORM_IDS, assetName, isPlatform } from "../src/lib/release";
+
+const platform = process.argv[2] ?? "";
+if (!isPlatform(platform)) throw new Error(`plataforma inválida "${platform}"; use uma de: ${PLATFORM_IDS.join(", ")}`);
 
 const root = join(import.meta.dir, "..");
-const repo = process.argv[2] ?? process.env.GITHUB_REPOSITORY;
 const { version } = conf;
+const { bundleDir, suffix } = PLATFORMS[platform];
 
-if (!repo) throw new Error("informe dono/repositorio (ou rode no GitHub Actions)");
-
-const tag = process.env.GITHUB_REF_TYPE === "tag" ? process.env.GITHUB_REF_NAME : undefined;
-if (tag !== undefined && !tagMatchesVersion(tag, version)) {
-  throw new Error(`a tag ${tag} não bate com a versão ${version} do tauri.conf.json: suba a versão antes de criar a tag`);
-}
-
-// Build nativo no Windows e build cruzado no Linux (cargo-xwin) saem em pastas diferentes.
+// Build nativo e build cruzado (cargo-xwin, --target) saem em pastas diferentes.
 const candidates = [
-  "src-tauri/target/release/bundle/nsis",
-  "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
+  `src-tauri/target/release/bundle/${bundleDir}`,
+  `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/${bundleDir}`,
+  `src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/${bundleDir}`,
 ].map((dir) => join(root, dir));
 
-async function findInstaller(): Promise<{ exe: string; sig: string }> {
-  const suffix = `_${version}_x64-setup.exe`;
+async function findInstaller(): Promise<{ file: string; sig: string }> {
   for (const dir of candidates) {
     const files = await readdir(dir).catch(() => [] as string[]);
-    const exe = files.find((f) => f.endsWith(suffix));
-    if (exe && files.includes(`${exe}.sig`)) return { exe: join(dir, exe), sig: join(dir, `${exe}.sig`) };
+    const file = files.find((f) => f.endsWith(suffix(version)));
+    if (file && files.includes(`${file}.sig`)) return { file: join(dir, file), sig: join(dir, `${file}.sig`) };
   }
-  throw new Error(`instalador ${suffix} com .sig não encontrado em: ${candidates.join(", ")}`);
+  throw new Error(`instalador *${suffix(version)} com .sig não encontrado em: ${candidates.join(", ")}`);
 }
 
-const { exe, sig } = await findInstaller();
+const { file, sig } = await findInstaller();
 const out = join(root, "release");
+const asset = assetName(platform, version);
 await mkdir(out, { recursive: true });
-await copyFile(exe, join(out, assetName(version)));
+await copyFile(file, join(out, asset));
+await copyFile(sig, join(out, `${asset}.sig`));
 
-const manifest = updaterManifest({
-  version,
-  repo,
-  signature: await Bun.file(sig).text(),
-  pubDate: new Date().toISOString(),
-});
-await Bun.write(join(out, "latest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-
-console.log(`release/${assetName(version)}`);
-console.log("release/latest.json");
+console.log(`release/${asset}`);
+console.log(`release/${asset}.sig`);

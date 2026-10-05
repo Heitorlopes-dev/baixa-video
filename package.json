@@ -12,8 +12,9 @@
     "test": "bun test",
     "sidecars": "bash scripts/fetch-sidecars.sh",
     "ok": "bun run check-types && bun test && vite build",
-    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc",
-    "gen:capability": "bun scripts/gen-capability.ts"
+    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis",
+    "gen:capability": "bun scripts/gen-capability.ts",
+    "build:linux": "tauri build --bundles appimage"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
