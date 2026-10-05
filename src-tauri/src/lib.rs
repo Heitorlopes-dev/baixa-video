@@ -1,3 +1,7 @@
+#[cfg(target_os = "android")]
+mod android;
+
+#[cfg(any(desktop, test))]
 use specta_typescript::Typescript;
 use tauri_specta::{collect_commands, Builder};
 
@@ -58,12 +62,15 @@ fn commands() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![bin_dir, kill_tree, is_appimage])
 }
 
+#[cfg(any(desktop, test))]
 /// Ancorado na pasta do crate (fixada na compilação), não na pasta de onde o
 /// processo foi aberto: assim o arquivo sempre cai em src/bindings.ts.
 const BINDINGS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../src/bindings.ts");
+#[cfg(any(desktop, test))]
 const BINDINGS_HEADER: &str =
     "// Gerado por tauri-specta a partir de src-tauri/src/lib.rs. Não edite à mão: rode `bun run gen:bindings`.";
 
+#[cfg(any(desktop, test))]
 fn export_bindings(builder: &Builder<tauri::Wry>) {
     builder
         .export(Typescript::default().header(BINDINGS_HEADER), BINDINGS_PATH)
@@ -84,6 +91,10 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init());
+
+    // No Android o yt-dlp roda pelo plugin Kotlin (src/android.rs).
+    #[cfg(target_os = "android")]
+    let app = app.plugin(android::init_plugin());
 
     // Atualização automática e reinício só existem no desktop.
     #[cfg(desktop)]
