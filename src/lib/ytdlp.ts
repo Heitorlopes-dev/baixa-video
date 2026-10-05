@@ -74,12 +74,26 @@ function padded(args: string[], length: number): string[] {
   return [...args, ...Array<string>(length - args.length).fill(PAD)];
 }
 
-/** O preenchimento fica antes de `--`: depois dele o yt-dlp trata tudo como URL. */
-export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[] {
-  const head = [
+/** Opções que todo download usa, em qualquer plataforma: saída linha a linha, nome do arquivo, caminho final e formato. */
+export function coreArgs(format: FormatId): string[] {
+  return [
     "--newline",
     "--no-playlist",
     "--no-quiet",
+    "-o",
+    "%(title)s.%(ext)s",
+    "--print",
+    `after_move:${FILE_PREFIX}%(filepath)s`,
+    ...FORMATS[format].args,
+  ];
+}
+
+/**
+ * Desktop: o yt-dlp roda como sidecar e precisa saber onde estão ffmpeg e deno
+ * e onde salvar. O preenchimento fica antes de `--`: depois dele o yt-dlp trata tudo como URL.
+ */
+export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[] {
+  const head = [
     "--windows-filenames",
     "--ffmpeg-location",
     binDir,
@@ -87,11 +101,7 @@ export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[]
     `deno:${binDir}`,
     "-P",
     dir,
-    "-o",
-    "%(title)s.%(ext)s",
-    "--print",
-    `after_move:${FILE_PREFIX}%(filepath)s`,
-    ...FORMATS[format].args,
+    ...coreArgs(format),
   ];
   return [...padded(head, ARGS_LEN - 2), "--", url.trim()];
 }

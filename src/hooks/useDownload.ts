@@ -1,63 +1,60 @@
 import { useReducer, useRef } from "react";
-import type { Child } from "@tauri-apps/plugin-shell";
 import { downloadReducer, initialState, isBusy, isDownloading } from "../lib/download";
-import { binDir, errorMessage, killProcessTree, spawnYtDlp } from "../lib/sidecar";
-import { buildArgs, updateArgs, type DownloadInput } from "../lib/ytdlp";
+import type { DownloadInput, Engine, Job, JobHandlers } from "../lib/engine";
+import { errorMessage } from "../lib/sidecar";
 
 /**
- * Liga a máquina de estados (src/lib/download.ts) ao processo do yt-dlp.
- * O estado da tela vem só do reducer; os refs aqui guardam o processo vivo e o
+ * Liga a máquina de estados (src/lib/download.ts) ao motor da plataforma.
+ * O estado da tela vem só do reducer; os refs guardam o trabalho em andamento e o
  * pedido de cancelamento, que precisam ser lidos na hora, fora do ciclo de render.
  */
-export function useDownload() {
+export function useDownload(engine: Engine | undefined) {
   const [state, dispatch] = useReducer(downloadReducer, initialState);
-  const childRef = useRef<Child | null>(null);
+  const jobRef = useRef<Job | null>(null);
   const cancelRequested = useRef(false);
 
-  async function run(args: string[]): Promise<void> {
+  const handlers: JobHandlers = {
+    stdout: (line) => dispatch({ type: "stdout", line }),
+    log: (line) => dispatch({ type: "log", line }),
+  };
+
+  async function run(startJob: (h: JobHandlers) => Promise<Job>): Promise<void> {
     try {
-      const { child, exit } = await spawnYtDlp(args, {
-        stdout: (line) => dispatch({ type: "stdout", line }),
-        stderr: (line) => dispatch({ type: "log", line }),
-      });
-      childRef.current = child;
-      // Cancelar clicado antes de o processo nascer: mata agora.
-      if (cancelRequested.current) await killProcessTree(child);
-      dispatch({ type: "exit", code: await exit });
+      const job = await startJob(handlers);
+      jobRef.current = job;
+      // Cancelar clicado antes de o trabalho começar: cancela agora.
+      if (cancelRequested.current) await job.cancel();
+      dispatch({ type: "exit", code: await job.exit });
     } catch (error) {
       dispatch({ type: "fail", message: errorMessage(error) });
     } finally {
-      childRef.current = null;
+      jobRef.current = null;
     }
   }
 
-  async function start(input: Omit<DownloadInput, "binDir">): Promise<void> {
+  async function start(input: DownloadInput): Promise<void> {
+    if (!engine) return;
     cancelRequested.current = false;
     dispatch({ type: "download-start" });
-    try {
-      const args = buildArgs({ ...input, binDir: await binDir() });
-      dispatch({ type: "log", line: `> yt-dlp ${args.join(" ")}` });
-      await run(args);
-    } catch (error) {
-      dispatch({ type: "fail", message: errorMessage(error) });
-    }
+    await run((h) => engine.download(input, h));
   }
 
   async function cancel(): Promise<void> {
     cancelRequested.current = true;
     dispatch({ type: "cancel" });
-    const child = childRef.current;
-    if (child) await killProcessTree(child);
+    await jobRef.current?.cancel();
   }
 
   async function updateYtDlp(): Promise<void> {
+    if (!engine) return;
     cancelRequested.current = false;
     dispatch({ type: "update-start" });
-    await run(updateArgs());
+    await run((h) => engine.updateYtDlp(h));
   }
 
   return {
     state,
+    ready: engine !== undefined,
     busy: isBusy(state),
     downloading: isDownloading(state),
     start,

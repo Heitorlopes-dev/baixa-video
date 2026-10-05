@@ -10,6 +10,7 @@ import { ProgressBar } from "./components/download/ProgressBar";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { Button } from "./components/ui/Button";
 import { useDownload } from "./hooks/useDownload";
+import { useEngine } from "./hooks/usePlatform";
 import { useCanUpdateYtDlp } from "./hooks/useUpdater";
 import { type FormatId, isValidUrl } from "./lib/ytdlp";
 
@@ -17,7 +18,7 @@ export function App() {
   const [url, setUrl] = useState("");
   const [chosenDir, setChosenDir] = useState<string | null>(null);
   const [format, setFormat] = useState<FormatId>("melhor");
-  const { state, busy, start, cancel, updateYtDlp, toggleLog } = useDownload();
+  const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(useEngine());
   const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
   const { data: defaultDir = "" } = useQuery({
     queryKey: ["download-dir"],
@@ -27,7 +28,7 @@ export function App() {
   });
 
   const dir = chosenDir ?? defaultDir;
-  const canStart = !busy && isValidUrl(url) && dir !== "";
+  const canStart = ready && !busy && isValidUrl(url) && dir !== "";
 
   async function chooseDir() {
     const picked = await open({ directory: true, defaultPath: dir || undefined, title: "Salvar em" });

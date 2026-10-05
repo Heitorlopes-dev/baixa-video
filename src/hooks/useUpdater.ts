@@ -2,15 +2,19 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { commands } from "../bindings";
+import { usePlatform } from "./usePlatform";
 
 /**
  * Confere uma vez, ao abrir o app, se há versão nova na última Release.
  * Sem internet ou sem latest.json a consulta falha em silêncio: não é erro do usuário.
  */
 export function useUpdateCheck() {
+  // A atualização automática do app só existe no desktop (no Android não há o plugin).
+  const platform = usePlatform();
   return useQuery({
     queryKey: ["app-update"],
     queryFn: () => check(),
+    enabled: platform === "desktop",
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnWindowFocus: false,

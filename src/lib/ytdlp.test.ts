@@ -5,6 +5,7 @@ import {
   ARGS_LEN,
   FORMAT_IDS,
   buildArgs,
+  coreArgs,
   isValidUrl,
   parseFilePath,
   parseFormatCount,
@@ -154,5 +155,24 @@ describe("parseLine", () => {
       kind: "file",
       path: "/x/[download] 50% off.mp4",
     });
+  });
+});
+
+describe("coreArgs", () => {
+  test("o comum a qualquer plataforma: saída por linha, nome, caminho final e formato, sem caminhos do desktop", () => {
+    const args = coreArgs("mp3");
+    expect(args.slice(0, 3)).toEqual(["--newline", "--no-playlist", "--no-quiet"]);
+    expect(args[args.indexOf("--print") + 1]).toBe("after_move:ARQUIVO::%(filepath)s");
+    expect(args).toContain("-x");
+    for (const desktopOnly of ["--ffmpeg-location", "--js-runtimes", "-P", "--windows-filenames", "--"]) {
+      expect(args).not.toContain(desktopOnly);
+    }
+  });
+
+  test("o desktop é o comum mais os extras, sem perder nada", () => {
+    for (const format of FORMAT_IDS) {
+      const desktop = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app" });
+      for (const arg of coreArgs(format)) expect(desktop).toContain(arg);
+    }
   });
 });
