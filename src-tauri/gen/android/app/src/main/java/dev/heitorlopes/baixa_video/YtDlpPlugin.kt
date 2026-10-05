@@ -22,6 +22,9 @@ import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONObject
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 
@@ -57,6 +60,11 @@ class OpenArgs {
 }
 
 @InvokeArg
+class CheckUpdateArgs {
+    lateinit var url: String
+}
+
+@InvokeArg
 class WatchSharedArgs {
     lateinit var onShared: Channel
 }
@@ -74,6 +82,8 @@ class SavedEvent(val uri: String, val name: String) {
 }
 
 class SharedTextEvent(val text: String)
+
+class LatestReleaseReply(val version: String, val apkUrl: String?)
 
 class VersionReply(val version: String)
 
@@ -275,5 +285,24 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
             args.onShared.sendObject(SharedTextEvent(it))
         }
         invoke.resolve()
+    }
+
+    /** Lê o latest.json da Release (o mesmo do desktop) e devolve a versão e o link do APK. */
+    @Command
+    fun checkUpdate(invoke: Invoke) {
+        val args = invoke.parseArgs(CheckUpdateArgs::class.java)
+        thread {
+            try {
+                val connection = URL(args.url).openConnection() as HttpURLConnection
+                connection.connectTimeout = 10_000
+                connection.readTimeout = 10_000
+                val body = connection.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(body)
+                val apkUrl = json.optJSONObject("android")?.optString("url")?.takeIf { it.isNotBlank() }
+                invoke.resolveObject(LatestReleaseReply(json.getString("version"), apkUrl))
+            } catch (e: Exception) {
+                invoke.reject("não deu para consultar a versão nova: ${e.message ?: e}")
+            }
+        }
     }
 }

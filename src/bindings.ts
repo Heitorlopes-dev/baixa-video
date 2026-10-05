@@ -33,6 +33,8 @@ export const commands = {
 	 *  antes da inscrição (app aberto pelo próprio compartilhamento) é entregue na hora.
 	 */
 	engineWatchShared: (onShared: Channel<SharedText>) => typedError<null, EngineError>(__TAURI_INVOKE("engine_watch_shared", { onShared })),
+	/**  Última versão publicada (Android: o atualizador do Tauri não existe lá). */
+	engineLatestRelease: () => typedError<LatestRelease, EngineError>(__TAURI_INVOKE("engine_latest_release")),
 };
 
 /* Types */
@@ -56,6 +58,15 @@ export type EngineError =
 export type EngineEvent = { kind: "line"; text: string; stream: Stream } | 
 /**  O arquivo pronto foi publicado num lugar que o usuário vê (Android: Downloads/BaixaVideo). */
 { kind: "saved"; uri: string; name: string } | { kind: "exit"; code: number | null };
+
+/**
+ *  Última versão publicada, lida do latest.json da Release. `apk_url` é nulo quando a
+ *  Release não tem APK (versões anteriores à do Android).
+ */
+export type LatestRelease = {
+	version: string,
+	apkUrl: string | null,
+};
 
 export type Platform = "desktop" | "android";
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import conf from "../../src-tauri/tauri.conf.json";
-import { PLATFORM_IDS, assetName, isPlatform, tagMatchesVersion, updaterManifest } from "./release";
+import { PLATFORM_IDS, androidAssetName, assetName, isPlatform, tagMatchesVersion, updaterManifest } from "./release";
 
 describe("updaterManifest", () => {
   const m = updaterManifest({
@@ -29,6 +29,14 @@ describe("updaterManifest", () => {
 
   test("nenhum nome de instalador tem espaço", () => {
     for (const p of PLATFORM_IDS) expect(assetName(p, "1.0.0")).not.toContain(" ");
+    expect(androidAssetName("1.0.0")).not.toContain(" ");
+  });
+
+  test("o app Android acha o APK da mesma versão em android.url, fora de platforms", () => {
+    expect(m.android.url).toBe(
+      "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.3.0/Baixa-Video_0.3.0_arm64.apk",
+    );
+    expect(Object.keys(m.platforms)).not.toContain("android");
   });
 });
 

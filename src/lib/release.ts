@@ -32,6 +32,11 @@ export function assetName(platform: Platform, version: string): string {
   return PLATFORMS[platform].asset(version);
 }
 
+/** APK do Android (só arm64). Não usa o atualizador do Tauri, por isso fica fora de `platforms`. */
+export function androidAssetName(version: string): string {
+  return `Baixa-Video_${version}_arm64.apk`;
+}
+
 export function tagMatchesVersion(tag: string, version: string): boolean {
   return tag === `v${version}`;
 }
@@ -56,5 +61,7 @@ export function updaterManifest({ version, repo, signatures, pubDate, notes = ""
       },
     ]),
   ) as Record<Platform, { signature: string; url: string }>;
-  return { version, notes, pub_date: pubDate, platforms };
+  // O app Android lê `android.url` (o atualizador do desktop ignora campos que não conhece).
+  const android = { url: `https://github.com/${repo}/releases/download/v${version}/${androidAssetName(version)}` };
+  return { version, notes, pub_date: pubDate, platforms, android };
 }

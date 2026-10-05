@@ -1,8 +1,8 @@
 name: build
 
 # Gera os instaladores assinados para a atualização automática:
-# Windows (.exe, NSIS) e Linux (AppImage), cada um no seu runner, e um job
-# final que junta as duas plataformas no latest.json que o app consulta.
+# Windows (.exe, NSIS), Linux (AppImage) e Android (APK), cada um no seu runner,
+# e um job final que junta tudo no latest.json que os apps consultam.
 # - Em push de tag v*: cria a Release com os instaladores e o latest.json.
 #   A tag precisa ser v + a versão do src-tauri/tauri.conf.json (o script confere).
 # - Em push na main: build completo sem publicar. Serve de CI de tudo que entra
@@ -111,8 +111,72 @@ jobs:
           path: release/
           if-no-files-found: error
 
+  android:
+    runs-on: ubuntu-latest
+    env:
+      NDK_VERSION: "30.0.16248370"
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sem a chave, o APK sairia assinado com a chave de depuração: falha antes de tudo.
+      - name: Chave de assinatura do APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::secret ANDROID_KEYSTORE_BASE64 ausente: o APK não pode ser assinado"; exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/baixa-video.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/baixa-video.jks" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: src-tauri/gen/android/**/*.gradle*
+
+      - uses: android-actions/setup-android@v3
+
+      - name: SDK e NDK do Android
+        run: |
+          sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;$NDK_VERSION"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: bun install --frozen-lockfile
+
+      - name: QuickJS-NG para o APK
+        run: scripts/fetch-sidecars.sh aarch64-linux-android
+
+      - name: Build do APK (assinado)
+        run: bun run tauri android build --apk --target aarch64
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: baixa-video
+
+      - name: APK com nome fixo
+        run: bun scripts/release-files.ts android-aarch64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: release/
+          if-no-files-found: error
+
   publish:
-    needs: [windows, linux]
+    needs: [windows, linux, android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

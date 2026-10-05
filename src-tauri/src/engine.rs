@@ -43,6 +43,15 @@ pub enum EngineEvent {
     Exit { code: Option<i32> },
 }
 
+/// Última versão publicada, lida do latest.json da Release. `apk_url` é nulo quando a
+/// Release não tem APK (versões anteriores à do Android).
+#[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LatestRelease {
+    pub version: String,
+    pub apk_url: Option<String>,
+}
+
 /// Texto que outro app compartilhou com este (Android: menu "Compartilhar").
 #[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -105,6 +114,27 @@ pub(crate) struct OpenRequest {
     pub uri: String,
 }
 
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CheckUpdateRequest {
+    pub url: String,
+}
+
+/// Endereço do latest.json: o mesmo que o atualizador do desktop usa (tauri.conf.json,
+/// plugins.updater.endpoints). Uma fonte só para as duas plataformas.
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+pub(crate) fn update_endpoint(app: &AppHandle) -> Option<String> {
+    app.config()
+        .plugins
+        .0
+        .get("updater")?
+        .get("endpoints")?
+        .get(0)?
+        .as_str()
+        .map(str::to_owned)
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn platform() -> Platform {
@@ -151,6 +181,13 @@ pub async fn engine_watch_shared(app: AppHandle, on_shared: Channel<SharedText>)
     backend::watch_shared(&app, on_shared)
 }
 
+/// Última versão publicada (Android: o atualizador do Tauri não existe lá).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_latest_release(app: AppHandle) -> Result<LatestRelease, EngineError> {
+    backend::latest_release(&app)
+}
+
 /// Abre o arquivo baixado no app que o usuário escolher (Android).
 #[tauri::command]
 #[specta::specta]
@@ -184,6 +221,9 @@ mod backend {
     pub fn watch_shared(_: &AppHandle, _: Channel<super::SharedText>) -> Result<(), EngineError> {
         Err(EngineError::Unsupported)
     }
+    pub fn latest_release(_: &AppHandle) -> Result<super::LatestRelease, EngineError> {
+        Err(EngineError::Unsupported)
+    }
 }
 
 #[cfg(test)]
@@ -214,6 +254,9 @@ mod tests {
         round_trip::<EngineEvent>("event-exit-canceled.json");
         round_trip::<EngineEvent>("event-saved.json");
         round_trip::<SharedText>("event-shared.json");
+        round_trip::<CheckUpdateRequest>("check-update-request.json");
+        round_trip::<LatestRelease>("latest-release.json");
+        round_trip::<LatestRelease>("latest-release-sem-apk.json");
         round_trip::<CancelRequest>("cancel-request.json");
         round_trip::<OpenRequest>("open-request.json");
         round_trip::<UpdateResult>("update-done.json");
@@ -234,6 +277,7 @@ mod tests {
         assert!(serde_json::from_value::<CancelReply>(with_extra("cancel.json")).is_err());
         assert!(serde_json::from_value::<UpdateResult>(with_extra("update-done.json")).is_err());
         assert!(serde_json::from_value::<EngineEvent>(with_extra("event-exit.json")).is_err());
+        assert!(serde_json::from_value::<LatestRelease>(with_extra("latest-release.json")).is_err());
     }
 
     #[test]

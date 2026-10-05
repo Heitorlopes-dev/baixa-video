@@ -1,7 +1,10 @@
 //! Motor do Android: implementa os comandos de src/engine.rs chamando o plugin
 //! Kotlin YtDlpPlugin (youtubedl-android). Tudo que volta do Kotlin é validado em
 //! modo estrito; o formato de cada mensagem está em contracts/android/.
-use crate::engine::{CancelReply, CancelRequest, DownloadRequest, EngineError, EngineEvent, OpenRequest, SharedText, UpdateResult, VersionReply};
+use crate::engine::{
+    update_endpoint, CancelReply, CancelRequest, CheckUpdateRequest, DownloadRequest, EngineError, EngineEvent, LatestRelease,
+    OpenRequest, SharedText, UpdateResult, VersionReply,
+};
 use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -53,6 +56,11 @@ struct WatchSharedPayload {
 
 pub fn watch_shared(app: &AppHandle, on_shared: Channel<SharedText>) -> Result<(), EngineError> {
     call::<IgnoredAny>(app, "watchShared", WatchSharedPayload { on_shared }).map(|_| ())
+}
+
+pub fn latest_release(app: &AppHandle) -> Result<LatestRelease, EngineError> {
+    let url = update_endpoint(app).ok_or_else(|| EngineError::Bridge("endereço do latest.json ausente no tauri.conf.json".into()))?;
+    call(app, "checkUpdate", CheckUpdateRequest { url })
 }
 
 pub fn open(app: &AppHandle, uri: String) -> Result<(), EngineError> {

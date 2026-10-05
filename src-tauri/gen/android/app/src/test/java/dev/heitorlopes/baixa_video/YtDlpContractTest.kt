@@ -36,6 +36,11 @@ class YtDlpContractTest {
         assertMatches("update-up-to-date.json", UpdateReply(UPDATE_UP_TO_DATE, "2026.08.19"))
         assertMatches("version.json", VersionReply("2026.08.19"))
         assertMatches("cancel.json", CancelReply(true))
+        assertMatches(
+            "latest-release.json",
+            LatestReleaseReply("0.4.0", "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.4.0/Baixa-Video_0.4.0_arm64.apk"),
+        )
+        assertMatches("latest-release-sem-apk.json", LatestReleaseReply("0.3.0", null))
     }
 
     @Test
@@ -52,6 +57,10 @@ class YtDlpContractTest {
         assertEquals(
             "content://media/external/downloads/1000123",
             mapper.readValue(file("open-request.json"), OpenArgs::class.java).uri,
+        )
+        assertEquals(
+            "https://github.com/Heitorlopes-dev/baixa-video/releases/latest/download/latest.json",
+            mapper.readValue(file("check-update-request.json"), CheckUpdateArgs::class.java).url,
         )
     }
 }

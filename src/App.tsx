@@ -6,6 +6,7 @@ import { DownloadActions } from "./components/download/DownloadActions";
 import { DownloadForm } from "./components/download/DownloadForm";
 import { LogPanel } from "./components/download/LogPanel";
 import { ProgressBar } from "./components/download/ProgressBar";
+import { AndroidUpdateBanner } from "./components/AndroidUpdateBanner";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { Button } from "./components/ui/Button";
 import { useDownload } from "./hooks/useDownload";
@@ -47,6 +48,7 @@ export function App() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-5 px-[max(1rem,env(safe-area-inset-left))] pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.75rem))] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6">
       <UpdateBanner disabled={busy} />
+      <AndroidUpdateBanner />
       <header>
         <h1 className="text-2xl font-semibold">Baixa Vídeo</h1>
         <p className="text-sm opacity-70">

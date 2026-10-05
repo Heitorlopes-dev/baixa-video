@@ -1,7 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { getVersion } from "@tauri-apps/api/app";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { commands } from "../bindings";
+import { engineErrorMessage } from "../lib/engines/android";
+import { isNewer } from "../lib/version";
 import { usePlatform } from "./usePlatform";
 
 /**
@@ -51,5 +54,26 @@ export function useCanUpdateYtDlp() {
     queryFn: async () => !(await commands.isAppimage()),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+/**
+ * Android: versão nova publicada? Lê o latest.json pela ponte (o Kotlin busca; a tela
+ * não chama serviço externo) e devolve o link do APK só se a versão for maior.
+ */
+export function useAndroidUpdate() {
+  const platform = usePlatform();
+  return useQuery({
+    queryKey: ["android-update"],
+    enabled: platform === "android",
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const [result, currentVersion] = await Promise.all([commands.engineLatestRelease(), getVersion()]);
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      const { version, apkUrl } = result.data;
+      return apkUrl && isNewer(version, currentVersion) ? { version, currentVersion, url: apkUrl } : null;
+    },
   });
 }

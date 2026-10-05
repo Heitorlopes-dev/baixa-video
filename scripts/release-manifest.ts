@@ -5,7 +5,14 @@
 import { readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import conf from "../src-tauri/tauri.conf.json";
-import { PLATFORM_IDS, type Platform, assetName, tagMatchesVersion, updaterManifest } from "../src/lib/release";
+import {
+  PLATFORM_IDS,
+  type Platform,
+  androidAssetName,
+  assetName,
+  tagMatchesVersion,
+  updaterManifest,
+} from "../src/lib/release";
 
 const root = join(import.meta.dir, "..");
 const out = join(root, "release");
@@ -25,7 +32,7 @@ const files = await readdir(out);
 const missing = PLATFORM_IDS.flatMap((p) => {
   const asset = assetName(p, version);
   return [asset, `${asset}.sig`].filter((f) => !files.includes(f));
-});
+}).concat(files.includes(androidAssetName(version)) ? [] : [androidAssetName(version)]);
 if (missing.length > 0) throw new Error(`faltando em release/: ${missing.join(", ")}`);
 
 const entries = await Promise.all(

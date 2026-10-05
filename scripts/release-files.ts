@@ -5,13 +5,29 @@
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import conf from "../src-tauri/tauri.conf.json";
-import { PLATFORMS, PLATFORM_IDS, assetName, isPlatform } from "../src/lib/release";
+import { PLATFORMS, PLATFORM_IDS, androidAssetName, assetName, isPlatform } from "../src/lib/release";
 
 const platform = process.argv[2] ?? "";
-if (!isPlatform(platform)) throw new Error(`plataforma inválida "${platform}"; use uma de: ${PLATFORM_IDS.join(", ")}`);
-
 const root = join(import.meta.dir, "..");
 const { version } = conf;
+const out = join(root, "release");
+
+// Android: só o APK assinado (o Android verifica a assinatura sozinho; não há .sig).
+if (platform === "android-aarch64") {
+  const dir = join(root, "src-tauri/gen/android/app/build/outputs/apk/universal/release");
+  const apk = (await readdir(dir)).find((f) => f.endsWith(".apk"));
+  if (!apk) throw new Error(`APK de release não encontrado em ${dir}`);
+  if (apk.includes("unsigned"))
+    throw new Error(`o APK ${apk} não está assinado: confira os secrets ANDROID_KEYSTORE_*`);
+  await mkdir(out, { recursive: true });
+  await copyFile(join(dir, apk), join(out, androidAssetName(version)));
+  console.log(`release/${androidAssetName(version)}`);
+  process.exit(0);
+}
+
+if (!isPlatform(platform)) {
+  throw new Error(`plataforma inválida "${platform}"; use android-aarch64 ou uma de: ${PLATFORM_IDS.join(", ")}`);
+}
 const { bundleDir, suffix } = PLATFORMS[platform];
 
 // Build nativo e build cruzado (cargo-xwin, --target) saem em pastas diferentes.
@@ -31,7 +47,6 @@ async function findInstaller(): Promise<{ file: string; sig: string }> {
 }
 
 const { file, sig } = await findInstaller();
-const out = join(root, "release");
 const asset = assetName(platform, version);
 await mkdir(out, { recursive: true });
 await copyFile(file, join(out, asset));
