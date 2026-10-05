@@ -110,6 +110,16 @@ só é aceito se a assinatura bater com a chave pública que está no `tauri.con
 
 ## Como funciona
 
+**Organização do front:** a tela (`src/App.tsx`) só desenha. O ciclo do download é
+uma máquina de estados pura em `src/lib/download.ts` (testada em `download.test.ts`),
+ligada ao processo do yt-dlp pelo gancho `src/hooks/useDownload.ts`. Tudo que toca o
+Tauri para rodar ou parar o processo fica em `src/lib/sidecar.ts`.
+
+**Ponte com o Rust tipada:** `src/bindings.ts` é gerado pelo tauri-specta a partir dos
+comandos em `src-tauri/src/lib.rs`. Não edite à mão. Ao mudar um comando Rust, rode
+`bun run gen:bindings` (ou só abra o app com `bun run tauri dev`, que regenera o arquivo)
+e commite o resultado junto.
+
 - `src/lib/ytdlp.ts`: monta os argumentos do yt-dlp por formato e lê o progresso
   e o caminho final do arquivo da saída. Puro, testado com `bun test`.
 - `src/App.tsx`: a tela. Dispara o sidecar com `@tauri-apps/plugin-shell`, escolhe

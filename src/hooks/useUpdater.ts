@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
+import { commands } from "../bindings";
 
 /**
  * Confere uma vez, ao abrir o app, se há versão nova na última Release.
@@ -44,7 +44,7 @@ export function useInstallUpdate(onProgress: (percent: number | null) => void) {
 export function useCanUpdateYtDlp() {
   return useQuery({
     queryKey: ["can-update-ytdlp"],
-    queryFn: async () => !(await invoke<boolean>("is_appimage")),
+    queryFn: async () => !(await commands.isAppimage()),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
