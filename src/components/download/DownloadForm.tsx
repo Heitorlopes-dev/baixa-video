@@ -12,6 +12,8 @@ type Props = {
   onUrlChange: (url: string) => void;
   dir: string;
   onChooseDir: () => void;
+  /** Quando o destino é fixo (Android), mostra onde o arquivo fica em vez do seletor de pasta. */
+  fixedDestination: string | null;
   format: FormatId;
   onFormatChange: (format: FormatId) => void;
   /** Download ou atualização em andamento: nada pode mudar. */
@@ -42,20 +44,28 @@ export function DownloadForm(props: Props) {
         />
       </Field>
 
-      <Field label="Salvar em" htmlFor={dirId}>
-        <div className="flex gap-2">
-          <TextInput
-            id={dirId}
-            className="flex-1 opacity-80"
-            value={props.dir}
-            readOnly
-            placeholder="Escolha uma pasta"
-          />
-          <Button variant="secondary" disabled={props.disabled} onClick={props.onChooseDir}>
-            Escolher pasta
-          </Button>
+      {props.fixedDestination === null ? (
+        <Field label="Salvar em" htmlFor={dirId}>
+          <div className="flex gap-2">
+            {/* min-w-0: sem isso o campo não encolhe e empurra o botão para fora em tela estreita */}
+            <TextInput
+              id={dirId}
+              className="min-w-0 flex-1 opacity-80"
+              value={props.dir}
+              readOnly
+              placeholder="Escolha uma pasta"
+            />
+            <Button variant="secondary" className="shrink-0" disabled={props.disabled} onClick={props.onChooseDir}>
+              Escolher pasta
+            </Button>
+          </div>
+        </Field>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Salvar em</span>
+          <p className="text-sm opacity-80">Na pasta {props.fixedDestination} do aparelho.</p>
         </div>
-      </Field>
+      )}
 
       <Field label="Formato" htmlFor={formatId}>
         <Select

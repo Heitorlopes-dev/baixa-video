@@ -28,7 +28,7 @@ export function App() {
   });
 
   const dir = chosenDir ?? defaultDir;
-  const canStart = ready && !busy && isValidUrl(url) && dir !== "";
+  const canStart = ready && !busy && isValidUrl(url) && (engine?.fixedDestination != null || dir !== "");
 
   async function chooseDir() {
     const picked = await open({ directory: true, defaultPath: dir || undefined, title: "Salvar em" });
@@ -40,11 +40,15 @@ export function App() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-5 px-6 py-6">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-5 px-[max(1rem,env(safe-area-inset-left))] pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.75rem))] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6">
       <UpdateBanner disabled={busy} />
       <header>
         <h1 className="text-2xl font-semibold">Baixa Vídeo</h1>
-        <p className="text-sm opacity-70">Cole o link, escolha a pasta e o formato, e clique em Baixar.</p>
+        <p className="text-sm opacity-70">
+          {engine?.fixedDestination
+            ? "Cole o link, escolha o formato e clique em Baixar."
+            : "Cole o link, escolha a pasta e o formato, e clique em Baixar."}
+        </p>
       </header>
 
       <DownloadForm
@@ -52,6 +56,7 @@ export function App() {
         onUrlChange={setUrl}
         dir={dir}
         onChooseDir={() => void chooseDir()}
+        fixedDestination={engine?.fixedDestination ?? null}
         format={format}
         onFormatChange={setFormat}
         disabled={busy}

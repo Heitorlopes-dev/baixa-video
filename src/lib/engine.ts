@@ -27,4 +27,6 @@ export type Engine = {
   /** Abre o resultado: no desktop mostra na pasta; no Android abre no app escolhido. */
   open: (path: string) => Promise<void>;
   openLabel: string;
+  /** Destino fixo, quando a pessoa não escolhe pasta (Android). null: escolhe no seletor (desktop). */
+  fixedDestination: string | null;
 };

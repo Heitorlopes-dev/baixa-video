@@ -16,7 +16,7 @@ export function DownloadActions({ state, canStart, onStart, onCancel, onOpenFold
   const file = readyFile(state);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {isDownloading(state) ? (
         <Button variant="danger" disabled={state.cancelling} onClick={onCancel}>
           Cancelar

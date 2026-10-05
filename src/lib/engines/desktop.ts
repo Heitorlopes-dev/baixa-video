@@ -18,4 +18,5 @@ export const desktopEngine: Engine = {
   updateYtDlp: (handlers) => run(updateArgs(), handlers),
   open: (path) => revealItemInDir(path),
   openLabel: "Abrir pasta",
+  fixedDestination: null,
 };

@@ -78,4 +78,5 @@ export const androidEngine: Engine = {
     if (result.status === "error") throw new Error(engineErrorMessage(result.error));
   },
   openLabel: "Abrir",
+  fixedDestination: "Downloads/BaixaVideo",
 };
