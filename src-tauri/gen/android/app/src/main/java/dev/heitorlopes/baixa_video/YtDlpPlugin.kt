@@ -56,6 +56,11 @@ class OpenArgs {
     lateinit var uri: String
 }
 
+@InvokeArg
+class WatchSharedArgs {
+    lateinit var onShared: Channel
+}
+
 class LineEvent(val text: String, val stream: String) {
     val kind = "line"
 }
@@ -67,6 +72,8 @@ class ExitEvent(val code: Int?) {
 class SavedEvent(val uri: String, val name: String) {
     val kind = "saved"
 }
+
+class SharedTextEvent(val text: String)
 
 class VersionReply(val version: String)
 
@@ -82,7 +89,25 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
     @Volatile
     private var initError: Exception? = null
 
+    // "Compartilhar → Baixa Vídeo": o texto chega pela intent. Se a tela ainda não se
+    // inscreveu (app aberto pelo próprio compartilhamento), fica guardado até ela pedir.
+    @Volatile
+    private var sharedChannel: Channel? = null
+
+    @Volatile
+    private var pendingShared: String? = null
+
+    private fun sharedText(intent: Intent?): String? =
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") intent.getStringExtra(Intent.EXTRA_TEXT) else null
+
+    override fun onNewIntent(intent: Intent) {
+        val text = sharedText(intent) ?: return
+        val channel = sharedChannel
+        if (channel != null) channel.sendObject(SharedTextEvent(text)) else pendingShared = text
+    }
+
     override fun load(webView: WebView) {
+        pendingShared = sharedText(activity.intent)
         thread {
             try {
                 YoutubeDL.getInstance().init(activity.application)
@@ -239,5 +264,16 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
         } catch (e: ActivityNotFoundException) {
             invoke.reject("nenhum app instalado abre esse tipo de arquivo")
         }
+    }
+
+    @Command
+    fun watchShared(invoke: Invoke) {
+        val args = invoke.parseArgs(WatchSharedArgs::class.java)
+        sharedChannel = args.onShared
+        pendingShared?.let {
+            pendingShared = null
+            args.onShared.sendObject(SharedTextEvent(it))
+        }
+        invoke.resolve()
     }
 }

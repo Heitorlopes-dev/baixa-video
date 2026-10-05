@@ -69,7 +69,8 @@ fn commands() -> Builder<tauri::Wry> {
         engine::engine_cancel,
         engine::engine_update,
         engine::engine_version,
-        engine::engine_open
+        engine::engine_open,
+        engine::engine_watch_shared
     ])
 }
 

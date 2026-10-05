@@ -4,15 +4,24 @@ import { cx } from "./cx";
 /** Cada variante com o seu estilo e o tamanho que ela usa quando ninguém pede outro. */
 const VARIANTS = {
   primary: {
-    classes: "rounded-md bg-blue-600 font-medium text-white hover:bg-blue-700 disabled:opacity-50",
+    classes:
+      "rounded-md bg-blue-600 font-medium text-white hover:bg-blue-700 disabled:opacity-50 pointer-coarse:min-h-11",
     size: "lg",
   },
-  danger: { classes: "rounded-md bg-red-600 font-medium text-white hover:bg-red-700 disabled:opacity-50", size: "lg" },
+  danger: {
+    classes:
+      "rounded-md bg-red-600 font-medium text-white hover:bg-red-700 disabled:opacity-50 pointer-coarse:min-h-11",
+    size: "lg",
+  },
   secondary: {
-    classes: "rounded-md border border-neutral-400/50 hover:bg-neutral-500/10 disabled:opacity-50",
+    classes:
+      "rounded-md border border-neutral-400/50 hover:bg-neutral-500/10 disabled:opacity-50 pointer-coarse:min-h-11",
     size: "md",
   },
-  link: { classes: "text-sm underline opacity-70 hover:opacity-100 disabled:opacity-40", size: "none" },
+  link: {
+    classes: "text-sm underline opacity-70 hover:opacity-100 disabled:opacity-40 pointer-coarse:min-h-11",
+    size: "none",
+  },
 } as const;
 
 const SIZES = {

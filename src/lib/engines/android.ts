@@ -1,7 +1,8 @@
 // Motor do Android: o plugin Kotlin (youtubedl-android) pela ponte tipada.
 // A pasta de destino e os caminhos do ffmpeg e do QuickJS ficam a cargo do Kotlin.
 import { Channel } from "@tauri-apps/api/core";
-import { type EngineError, type EngineEvent, commands } from "../../bindings";
+import { type EngineError, type EngineEvent, type SharedText, commands } from "../../bindings";
+import { extractUrl } from "../share";
 import type { Engine, Job, JobHandlers } from "../engine";
 import { coreArgs } from "../ytdlp";
 
@@ -79,4 +80,13 @@ export const androidEngine: Engine = {
   },
   openLabel: "Abrir",
   fixedDestination: "Downloads/BaixaVideo",
+
+  watchShared: async (onUrl) => {
+    const channel = new Channel<SharedText>(({ text }) => {
+      const url = extractUrl(text);
+      if (url) onUrl(url);
+    });
+    const result = await commands.engineWatchShared(channel);
+    if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+  },
 };

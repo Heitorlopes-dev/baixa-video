@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -26,6 +26,11 @@ export function App() {
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
   });
+
+  // "Compartilhar → Baixa Vídeo" (Android): o link compartilhado preenche o campo.
+  useEffect(() => {
+    void engine?.watchShared?.(setUrl).catch(() => undefined);
+  }, [engine]);
 
   const dir = chosenDir ?? defaultDir;
   const canStart = ready && !busy && isValidUrl(url) && (engine?.fixedDestination != null || dir !== "");

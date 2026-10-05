@@ -1,7 +1,7 @@
 //! Motor do Android: implementa os comandos de src/engine.rs chamando o plugin
 //! Kotlin YtDlpPlugin (youtubedl-android). Tudo que volta do Kotlin é validado em
 //! modo estrito; o formato de cada mensagem está em contracts/android/.
-use crate::engine::{CancelReply, CancelRequest, DownloadRequest, EngineError, EngineEvent, OpenRequest, UpdateResult, VersionReply};
+use crate::engine::{CancelReply, CancelRequest, DownloadRequest, EngineError, EngineEvent, OpenRequest, SharedText, UpdateResult, VersionReply};
 use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -43,6 +43,16 @@ pub fn update(app: &AppHandle) -> Result<UpdateResult, EngineError> {
 
 pub fn version(app: &AppHandle) -> Result<String, EngineError> {
     call::<VersionReply>(app, "version", ()).map(|r| r.version)
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WatchSharedPayload {
+    on_shared: Channel<SharedText>,
+}
+
+pub fn watch_shared(app: &AppHandle, on_shared: Channel<SharedText>) -> Result<(), EngineError> {
+    call::<IgnoredAny>(app, "watchShared", WatchSharedPayload { on_shared }).map(|_| ())
 }
 
 pub fn open(app: &AppHandle, uri: String) -> Result<(), EngineError> {

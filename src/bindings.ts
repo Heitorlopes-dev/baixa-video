@@ -28,6 +28,11 @@ export const commands = {
 	engineVersion: () => typedError<string, EngineError>(__TAURI_INVOKE("engine_version")),
 	/**  Abre o arquivo baixado no app que o usuário escolher (Android). */
 	engineOpen: (uri: string) => typedError<null, EngineError>(__TAURI_INVOKE("engine_open", { uri })),
+	/**
+	 *  Inscreve a tela para receber textos compartilhados por outros apps. O que chegou
+	 *  antes da inscrição (app aberto pelo próprio compartilhamento) é entregue na hora.
+	 */
+	engineWatchShared: (onShared: Channel<SharedText>) => typedError<null, EngineError>(__TAURI_INVOKE("engine_watch_shared", { onShared })),
 };
 
 /* Types */
@@ -53,6 +58,11 @@ export type EngineEvent = { kind: "line"; text: string; stream: Stream } |
 { kind: "saved"; uri: string; name: string } | { kind: "exit"; code: number | null };
 
 export type Platform = "desktop" | "android";
+
+/**  Texto que outro app compartilhou com este (Android: menu "Compartilhar"). */
+export type SharedText = {
+	text: string,
+};
 
 export type Stream = "stdout" | "stderr";
 

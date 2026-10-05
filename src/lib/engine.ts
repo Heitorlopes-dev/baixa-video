@@ -29,4 +29,6 @@ export type Engine = {
   openLabel: string;
   /** Destino fixo, quando a pessoa não escolhe pasta (Android). null: escolhe no seletor (desktop). */
   fixedDestination: string | null;
+  /** Avisa quando outro app compartilha um link com este (só no Android). */
+  watchShared?: (onUrl: (url: string) => void) => Promise<void>;
 };

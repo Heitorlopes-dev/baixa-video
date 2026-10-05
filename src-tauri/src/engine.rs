@@ -43,6 +43,13 @@ pub enum EngineEvent {
     Exit { code: Option<i32> },
 }
 
+/// Texto que outro app compartilhou com este (Android: menu "Compartilhar").
+#[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SharedText {
+    pub text: String,
+}
+
 #[derive(Deserialize, Serialize, Type, Clone, Copy, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum UpdateStatus {
@@ -136,6 +143,14 @@ pub async fn engine_version(app: AppHandle) -> Result<String, EngineError> {
     backend::version(&app)
 }
 
+/// Inscreve a tela para receber textos compartilhados por outros apps. O que chegou
+/// antes da inscrição (app aberto pelo próprio compartilhamento) é entregue na hora.
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_watch_shared(app: AppHandle, on_shared: Channel<SharedText>) -> Result<(), EngineError> {
+    backend::watch_shared(&app, on_shared)
+}
+
 /// Abre o arquivo baixado no app que o usuário escolher (Android).
 #[tauri::command]
 #[specta::specta]
@@ -164,6 +179,9 @@ mod backend {
         Err(EngineError::Unsupported)
     }
     pub fn open(_: &AppHandle, _: String) -> Result<(), EngineError> {
+        Err(EngineError::Unsupported)
+    }
+    pub fn watch_shared(_: &AppHandle, _: Channel<super::SharedText>) -> Result<(), EngineError> {
         Err(EngineError::Unsupported)
     }
 }
@@ -195,6 +213,7 @@ mod tests {
         round_trip::<EngineEvent>("event-exit.json");
         round_trip::<EngineEvent>("event-exit-canceled.json");
         round_trip::<EngineEvent>("event-saved.json");
+        round_trip::<SharedText>("event-shared.json");
         round_trip::<CancelRequest>("cancel-request.json");
         round_trip::<OpenRequest>("open-request.json");
         round_trip::<UpdateResult>("update-done.json");

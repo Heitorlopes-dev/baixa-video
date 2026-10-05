@@ -27,6 +27,7 @@ class YtDlpContractTest {
         assertMatches("event-exit.json", ExitEvent(0))
         assertMatches("event-exit-canceled.json", ExitEvent(null))
         assertMatches("event-saved.json", SavedEvent("content://media/external/downloads/1000123", "Me at the zoo.mp3"))
+        assertMatches("event-shared.json", SharedTextEvent("Olha este vídeo: https://youtu.be/jNQXAC9IVRw?si=abc"))
     }
 
     @Test
