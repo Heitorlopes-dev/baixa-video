@@ -2,9 +2,23 @@
 // Cada evento vem do processo do yt-dlp ou de um clique; o estado da tela sai
 // só daqui, então combinações impossíveis ("concluído" com a barra em 40%)
 // não acontecem e tudo é testável com `bun test`, sem abrir o app.
-import { parseFilePath, parseFormatCount, parsePhase, parseProgress } from "./ytdlp";
+import { parseLine, type YtDlpLine } from "./ytdlp";
 
-export type Status = "parado" | "baixando" | "convertendo" | "concluido" | "erro" | "cancelado" | "atualizando";
+/**
+ * Regras de cada status, num lugar só: se a tela fica ocupada (campos travados)
+ * e se é um download em andamento (mostra Cancelar). O tipo Status sai daqui.
+ */
+const STATUS_RULES = {
+  parado: { busy: false, downloading: false },
+  baixando: { busy: true, downloading: true },
+  convertendo: { busy: true, downloading: true },
+  concluido: { busy: false, downloading: false },
+  erro: { busy: false, downloading: false },
+  cancelado: { busy: false, downloading: false },
+  atualizando: { busy: true, downloading: false },
+} as const satisfies Record<string, { busy: boolean; downloading: boolean }>;
+
+export type Status = keyof typeof STATUS_RULES;
 
 export type DownloadState = {
   status: Status;
@@ -45,37 +59,36 @@ export const initialState: DownloadState = {
 };
 
 export function isDownloading(state: DownloadState): boolean {
-  return state.status === "baixando" || state.status === "convertendo";
+  return STATUS_RULES[state.status].downloading;
 }
 
 export function isBusy(state: DownloadState): boolean {
-  return isDownloading(state) || state.status === "atualizando";
+  return STATUS_RULES[state.status].busy;
 }
 
 function appendLog(log: readonly string[], line: string): readonly string[] {
   return log.length >= MAX_LOG ? [...log.slice(log.length - MAX_LOG + 1), line] : [...log, line];
 }
 
-/** O que uma linha do stdout muda num download em andamento. */
-function applyDownloadLine(state: DownloadState, line: string): DownloadState {
-  const count = parseFormatCount(line);
-  const phase = parsePhase(line);
-  const pct = parseProgress(line);
-  const path = parseFilePath(line);
-
-  const part = count !== null ? { atual: 0, total: count } : state.part;
-  const afterPhase: DownloadState =
-    phase === "stream"
-      ? { ...state, part: { ...part, atual: Math.min(part.atual + 1, part.total) }, progress: 0, status: "baixando" }
-      : phase === "convert"
-        ? { ...state, part, status: "convertendo" }
-        : { ...state, part };
-
-  return {
-    ...afterPhase,
-    progress: pct ?? afterPhase.progress,
-    filePath: path ?? afterPhase.filePath,
-  };
+/** O que uma linha reconhecida do yt-dlp muda num download em andamento. */
+function applyLine(state: DownloadState, line: YtDlpLine): DownloadState {
+  switch (line.kind) {
+    case "formats":
+      return { ...state, part: { atual: 0, total: line.count } };
+    case "part-start":
+      return {
+        ...state,
+        status: "baixando",
+        progress: 0,
+        part: { ...state.part, atual: Math.min(state.part.atual + 1, state.part.total) },
+      };
+    case "convert":
+      return { ...state, status: "convertendo" };
+    case "progress":
+      return { ...state, progress: line.percent };
+    case "file":
+      return { ...state, filePath: line.path };
+  }
 }
 
 function finished(state: DownloadState, code: number | null): DownloadState {
@@ -96,7 +109,8 @@ export function downloadReducer(state: DownloadState, event: DownloadEvent): Dow
       return { ...initialState, status: "atualizando", logOpen: true };
     case "stdout": {
       const logged = { ...state, log: appendLog(state.log, event.line) };
-      return isDownloading(state) ? applyDownloadLine(logged, event.line) : logged;
+      const line = isDownloading(state) ? parseLine(event.line) : null;
+      return line === null ? logged : applyLine(logged, line);
     }
     case "log":
       return { ...state, log: appendLog(state.log, event.line) };

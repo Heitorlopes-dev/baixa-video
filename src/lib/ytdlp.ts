@@ -135,6 +135,43 @@ export function parsePhase(line: string): Phase | null {
   return null;
 }
 
+/** O que uma linha do yt-dlp significa para o download. Cada linha é no máximo uma destas coisas. */
+export type YtDlpLine =
+  | { kind: "formats"; count: number }
+  | { kind: "part-start" }
+  | { kind: "convert" }
+  | { kind: "progress"; percent: number }
+  | { kind: "file"; path: string };
+
+const PHASE_LINE = {
+  stream: { kind: "part-start" },
+  convert: { kind: "convert" },
+} as const satisfies Record<Phase, YtDlpLine>;
+
+/** Leitores em ordem: o primeiro que reconhecer a linha vence. O do arquivo final vem antes porque o caminho pode ter de tudo. */
+const LINE_READERS: readonly ((line: string) => YtDlpLine | null)[] = [
+  (line) => {
+    const path = parseFilePath(line);
+    return path === null ? null : { kind: "file", path };
+  },
+  (line) => {
+    const count = parseFormatCount(line);
+    return count === null ? null : { kind: "formats", count };
+  },
+  (line) => {
+    const phase = parsePhase(line);
+    return phase === null ? null : PHASE_LINE[phase];
+  },
+  (line) => {
+    const percent = parseProgress(line);
+    return percent === null ? null : { kind: "progress", percent };
+  },
+];
+
+export function parseLine(line: string): YtDlpLine | null {
+  return LINE_READERS.reduce<YtDlpLine | null>((found, read) => found ?? read(line), null);
+}
+
 export function isValidUrl(value: string): boolean {
   try {
     const url = new URL(value.trim());

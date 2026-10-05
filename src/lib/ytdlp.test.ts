@@ -8,6 +8,7 @@ import {
   isValidUrl,
   parseFilePath,
   parseFormatCount,
+  parseLine,
   parsePhase,
   parseProgress,
   updateArgs,
@@ -134,5 +135,24 @@ describe("isValidUrl", () => {
     expect(isValidUrl("youtube.com/watch")).toBe(false);
     expect(isValidUrl("file:///etc/passwd")).toBe(false);
     expect(isValidUrl("")).toBe(false);
+  });
+});
+
+describe("parseLine", () => {
+  test("cada linha vira no máximo um evento com tipo", () => {
+    expect(parseLine("[info] jNQXAC9IVRw: Downloading 1 format(s): 133+140")).toEqual({ kind: "formats", count: 2 });
+    expect(parseLine("[download] Destination: /x/a.f133.mp4")).toEqual({ kind: "part-start" });
+    expect(parseLine("[download]  45.3% of 1MiB at 1MiB/s ETA 00:00")).toEqual({ kind: "progress", percent: 45.3 });
+    expect(parseLine('[Merger] Merging formats into "/x/a.mp4"')).toEqual({ kind: "convert" });
+    expect(parseLine("[ExtractAudio] Destination: /x/a.mp3")).toEqual({ kind: "convert" });
+    expect(parseLine("ARQUIVO::/x/a.mp4")).toEqual({ kind: "file", path: "/x/a.mp4" });
+    expect(parseLine("[youtube] abc: Downloading webpage")).toBeNull();
+  });
+
+  test("o caminho final vence mesmo se parecer outra coisa", () => {
+    expect(parseLine("ARQUIVO::/x/[download] 50% off.mp4")).toEqual({
+      kind: "file",
+      path: "/x/[download] 50% off.mp4",
+    });
   });
 });

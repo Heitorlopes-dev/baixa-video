@@ -4,7 +4,7 @@ import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { FORMATS, FORMAT_IDS, isValidUrl, type FormatId } from "./lib/ytdlp";
-import type { DownloadState, Status } from "./lib/download";
+import { STATUS_VIEW, barWidth, statusLabel } from "./components/download/statusView";
 import { UpdateBanner } from "./UpdateBanner";
 import { useCanUpdateYtDlp } from "./hooks/useUpdater";
 import { useDownload } from "./hooks/useDownload";
@@ -141,8 +141,8 @@ export function App() {
 
       <div className="h-2 w-full overflow-hidden rounded bg-neutral-500/20">
         <div
-          className={`h-full transition-[width] ${barClass(state.status)}`}
-          style={{ width: `${state.status === "convertendo" ? 100 : state.progress}%` }}
+          className={`h-full transition-[width] ${STATUS_VIEW[state.status].bar}`}
+          style={{ width: `${barWidth(state)}%` }}
         />
       </div>
 
@@ -173,31 +173,4 @@ export function App() {
       </section>
     </main>
   );
-}
-
-function barClass(status: Status): string {
-  if (status === "erro") return "bg-red-500";
-  if (status === "convertendo") return "animate-pulse bg-blue-500";
-  return "bg-blue-500";
-}
-
-function statusLabel({ status, progress, part }: DownloadState): string {
-  switch (status) {
-    case "parado":
-      return "";
-    case "baixando": {
-      const parte = part.total > 1 && part.atual > 0 ? ` (parte ${part.atual} de ${part.total})` : "";
-      return `Baixando${parte}… ${progress.toFixed(0)}%`;
-    }
-    case "convertendo":
-      return "Convertendo…";
-    case "concluido":
-      return "Concluído";
-    case "erro":
-      return "Deu erro. Veja os detalhes.";
-    case "cancelado":
-      return "Cancelado";
-    case "atualizando":
-      return "Atualizando o yt-dlp…";
-  }
 }
