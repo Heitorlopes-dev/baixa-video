@@ -2,7 +2,8 @@
 //! Kotlin YtDlpPlugin (youtubedl-android). Tudo que volta do Kotlin é validado em
 //! modo estrito; o formato de cada mensagem está em contracts/android/.
 use crate::engine::{
-    update_endpoint, CancelReply, CancelRequest, CheckUpdateRequest, DownloadRequest, EngineError, EngineEvent, LatestRelease,
+    update_endpoint, CancelReply, CancelRequest, CheckUpdateRequest, Destination, DownloadRequest, EngineError, EngineEvent,
+    LatestRelease,
     OpenRequest, SharedText, UpdateResult, VersionReply,
 };
 use serde::de::{DeserializeOwned, IgnoredAny};
@@ -56,6 +57,15 @@ struct WatchSharedPayload {
 
 pub fn watch_shared(app: &AppHandle, on_shared: Channel<SharedText>) -> Result<(), EngineError> {
     call::<IgnoredAny>(app, "watchShared", WatchSharedPayload { on_shared }).map(|_| ())
+}
+
+pub fn destination(app: &AppHandle) -> Result<Destination, EngineError> {
+    call(app, "destination", ())
+}
+
+/// Espera a pessoa escolher (ou cancelar) no seletor do Android.
+pub fn pick_folder(app: &AppHandle) -> Result<Destination, EngineError> {
+    call(app, "pickFolder", ())
 }
 
 pub fn latest_release(app: &AppHandle) -> Result<LatestRelease, EngineError> {

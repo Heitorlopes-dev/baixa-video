@@ -1,6 +1,7 @@
 // O que a tela precisa de um motor de download, em qualquer plataforma.
 // Desktop: yt-dlp como sidecar (engines/desktop.ts). Android: plugin Kotlin pela
 // ponte tipada (engines/android.ts). O gancho useDownload só conhece esta interface.
+import type { Destination } from "../bindings";
 import type { FormatId } from "./ytdlp";
 
 export type JobHandlers = {
@@ -27,8 +28,13 @@ export type Engine = {
   /** Abre o resultado: no desktop mostra na pasta; no Android abre no app escolhido. */
   open: (path: string) => Promise<void>;
   openLabel: string;
-  /** Destino fixo, quando a pessoa não escolhe pasta (Android). null: escolhe no seletor (desktop). */
-  fixedDestination: string | null;
+  /**
+   * Onde o arquivo fica. "path": a tela escolhe a pasta e manda o caminho (desktop).
+   * "managed": o motor guarda a pasta escolhida no seletor nativo (Android).
+   */
+  destination:
+    | { kind: "path" }
+    | { kind: "managed"; current: () => Promise<Destination>; pick: () => Promise<Destination> };
   /** Avisa quando outro app compartilha um link com este (só no Android). */
   watchShared?: (onUrl: (url: string) => void) => Promise<void>;
 };

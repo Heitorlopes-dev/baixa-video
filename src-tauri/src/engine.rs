@@ -52,6 +52,14 @@ pub struct LatestRelease {
     pub apk_url: Option<String>,
 }
 
+/// Para onde os arquivos vão no Android: a pasta escolhida no seletor (`custom`) ou o padrão.
+#[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Destination {
+    pub label: String,
+    pub custom: bool,
+}
+
 /// Texto que outro app compartilhou com este (Android: menu "Compartilhar").
 #[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -181,6 +189,20 @@ pub async fn engine_watch_shared(app: AppHandle, on_shared: Channel<SharedText>)
     backend::watch_shared(&app, on_shared)
 }
 
+/// Para onde os arquivos vão (Android).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_destination(app: AppHandle) -> Result<Destination, EngineError> {
+    backend::destination(&app)
+}
+
+/// Abre o seletor de pastas do Android; cancelar mantém o destino atual.
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_pick_folder(app: AppHandle) -> Result<Destination, EngineError> {
+    backend::pick_folder(&app)
+}
+
 /// Última versão publicada (Android: o atualizador do Tauri não existe lá).
 #[tauri::command]
 #[specta::specta]
@@ -224,6 +246,12 @@ mod backend {
     pub fn latest_release(_: &AppHandle) -> Result<super::LatestRelease, EngineError> {
         Err(EngineError::Unsupported)
     }
+    pub fn destination(_: &AppHandle) -> Result<super::Destination, EngineError> {
+        Err(EngineError::Unsupported)
+    }
+    pub fn pick_folder(_: &AppHandle) -> Result<super::Destination, EngineError> {
+        Err(EngineError::Unsupported)
+    }
 }
 
 #[cfg(test)]
@@ -257,6 +285,8 @@ mod tests {
         round_trip::<CheckUpdateRequest>("check-update-request.json");
         round_trip::<LatestRelease>("latest-release.json");
         round_trip::<LatestRelease>("latest-release-sem-apk.json");
+        round_trip::<Destination>("destination.json");
+        round_trip::<Destination>("destination-default.json");
         round_trip::<CancelRequest>("cancel-request.json");
         round_trip::<OpenRequest>("open-request.json");
         round_trip::<UpdateResult>("update-done.json");
@@ -278,6 +308,7 @@ mod tests {
         assert!(serde_json::from_value::<UpdateResult>(with_extra("update-done.json")).is_err());
         assert!(serde_json::from_value::<EngineEvent>(with_extra("event-exit.json")).is_err());
         assert!(serde_json::from_value::<LatestRelease>(with_extra("latest-release.json")).is_err());
+        assert!(serde_json::from_value::<Destination>(with_extra("destination.json")).is_err());
     }
 
     #[test]

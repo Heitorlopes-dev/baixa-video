@@ -71,7 +71,9 @@ fn commands() -> Builder<tauri::Wry> {
         engine::engine_version,
         engine::engine_open,
         engine::engine_watch_shared,
-        engine::engine_latest_release
+        engine::engine_latest_release,
+        engine::engine_destination,
+        engine::engine_pick_folder
     ])
 }
 

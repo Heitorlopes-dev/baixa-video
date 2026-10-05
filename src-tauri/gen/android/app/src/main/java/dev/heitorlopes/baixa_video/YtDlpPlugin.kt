@@ -4,14 +4,18 @@ import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import android.webkit.WebView
+import androidx.activity.result.ActivityResult
+import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -84,6 +88,10 @@ class SavedEvent(val uri: String, val name: String) {
 class SharedTextEvent(val text: String)
 
 class LatestReleaseReply(val version: String, val apkUrl: String?)
+
+class DestinationReply(val label: String, val custom: Boolean)
+
+private const val FOLDER_KEY = "pasta"
 
 class VersionReply(val version: String)
 
@@ -163,26 +171,53 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
     /** Cache do yt-dlp: guarda a solução do desafio do YouTube entre um vídeo e outro. */
     private fun cacheDir(): String = File(activity.cacheDir, "yt-dlp").also { it.mkdirs() }.absolutePath
 
+    private val prefs by lazy { activity.getSharedPreferences("baixa_video", Context.MODE_PRIVATE) }
+
     /**
-     * Copia o arquivo para Downloads/BaixaVideo pelo MediaStore (Android 10+, sem permissão)
-     * e apaga a cópia interna. Nome repetido o próprio Android renomeia.
+     * Pasta escolhida no seletor do Android, se ainda houver permissão de escrita nela.
+     * Se a pasta sumiu ou a permissão foi revogada, esquece a escolha e volta ao padrão.
+     */
+    private fun chosenFolder(): Uri? {
+        val saved = prefs.getString(FOLDER_KEY, null)?.let(Uri::parse) ?: return null
+        val allowed = activity.contentResolver.persistedUriPermissions.any { it.uri == saved && it.isWritePermission }
+        if (!allowed) prefs.edit().remove(FOLDER_KEY).apply()
+        return saved.takeIf { allowed }
+    }
+
+    private fun currentDestination(): DestinationReply =
+        chosenFolder()?.let { DestinationReply(folderLabel(DocumentsContract.getTreeDocumentId(it)), true) }
+            ?: DestinationReply(DEFAULT_DESTINATION, false)
+
+    /**
+     * Copia o arquivo pronto para o lugar que a pessoa vê e apaga a cópia interna:
+     * a pasta escolhida no seletor, ou Downloads/BaixaVideo pelo MediaStore (Android 10+,
+     * sem permissão). Nome repetido o próprio Android renomeia.
      */
     private fun publish(file: File): Uri {
         val resolver = activity.contentResolver
         val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: "application/octet-stream"
-        val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, file.name)
-            put(MediaStore.Downloads.MIME_TYPE, mime)
-            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/BaixaVideo")
-            put(MediaStore.Downloads.IS_PENDING, 1)
+        val folder = chosenFolder()
+        val uri = if (folder != null) {
+            val parent = DocumentsContract.buildDocumentUriUsingTree(folder, DocumentsContract.getTreeDocumentId(folder))
+            DocumentsContract.createDocument(resolver, parent, mime, file.name)
+                ?: throw IllegalStateException("o Android não criou o arquivo na pasta escolhida")
+        } else {
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, file.name)
+                put(MediaStore.Downloads.MIME_TYPE, mime)
+                put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/BaixaVideo")
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+            resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: throw IllegalStateException("o Android não criou o arquivo em Downloads")
         }
-        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-            ?: throw IllegalStateException("o Android não criou o arquivo em Downloads")
         resolver.openOutputStream(uri).use { out ->
-            requireNotNull(out) { "sem acesso ao arquivo em Downloads" }
+            requireNotNull(out) { "sem acesso ao arquivo de destino" }
             file.inputStream().use { it.copyTo(out) }
         }
-        resolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
+        if (folder == null) {
+            resolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
+        }
         file.delete()
         return uri
     }
@@ -304,5 +339,35 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
                 invoke.reject("não deu para consultar a versão nova: ${e.message ?: e}")
             }
         }
+    }
+
+    /** Para onde os arquivos vão: a pasta escolhida ou o padrão. */
+    @Command
+    fun destination(invoke: Invoke) {
+        invoke.resolveObject(currentDestination())
+    }
+
+    /** Abre o seletor de pastas do Android. Cancelar mantém o destino atual. */
+    @Command
+    fun pickFolder(invoke: Invoke) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
+        )
+        startActivityForResult(invoke, intent, "folderPicked")
+    }
+
+    /** Guarda a permissão permanente sobre a pasta escolhida e solta a da anterior. */
+    @ActivityCallback
+    fun folderPicked(invoke: Invoke, result: ActivityResult) {
+        val uri = result.data?.data
+        if (result.resultCode == Activity.RESULT_OK && uri != null) {
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            val resolver = activity.contentResolver
+            chosenFolder()?.takeIf { it != uri }?.let { old -> runCatching { resolver.releasePersistableUriPermission(old, flags) } }
+            resolver.takePersistableUriPermission(uri, flags)
+            prefs.edit().putString(FOLDER_KEY, uri.toString()).apply()
+        }
+        invoke.resolveObject(currentDestination())
     }
 }

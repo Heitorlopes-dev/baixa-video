@@ -79,7 +79,19 @@ export const androidEngine: Engine = {
     if (result.status === "error") throw new Error(engineErrorMessage(result.error));
   },
   openLabel: "Abrir",
-  fixedDestination: "Downloads/BaixaVideo",
+  destination: {
+    kind: "managed",
+    current: async () => {
+      const result = await commands.engineDestination();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return result.data;
+    },
+    pick: async () => {
+      const result = await commands.enginePickFolder();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return result.data;
+    },
+  },
 
   watchShared: async (onUrl) => {
     const channel = new Channel<SharedText>(({ text }) => {

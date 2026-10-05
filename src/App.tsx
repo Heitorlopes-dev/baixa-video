@@ -10,6 +10,7 @@ import { AndroidUpdateBanner } from "./components/AndroidUpdateBanner";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { Button } from "./components/ui/Button";
 import { useDownload } from "./hooks/useDownload";
+import { useManagedDestination } from "./hooks/useDestination";
 import { useEngine } from "./hooks/usePlatform";
 import { useCanUpdateYtDlp } from "./hooks/useUpdater";
 import { type FormatId, isValidUrl } from "./lib/ytdlp";
@@ -20,6 +21,7 @@ export function App() {
   const engine = useEngine();
   const [format, setFormat] = useState<FormatId>("melhor");
   const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(engine);
+  const managed = useManagedDestination(engine);
   const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
   const { data: defaultDir = "" } = useQuery({
     queryKey: ["download-dir"],
@@ -34,7 +36,7 @@ export function App() {
   }, [engine]);
 
   const dir = chosenDir ?? defaultDir;
-  const canStart = ready && !busy && isValidUrl(url) && (engine?.fixedDestination != null || dir !== "");
+  const canStart = ready && !busy && isValidUrl(url) && (managed !== null || dir !== "");
 
   async function chooseDir() {
     const picked = await open({ directory: true, defaultPath: dir || undefined, title: "Salvar em" });
@@ -52,7 +54,7 @@ export function App() {
       <header>
         <h1 className="text-2xl font-semibold">Baixa Vídeo</h1>
         <p className="text-sm opacity-70">
-          {engine?.fixedDestination
+          {managed
             ? "Cole o link, escolha o formato e clique em Baixar."
             : "Cole o link, escolha a pasta e o formato, e clique em Baixar."}
         </p>
@@ -63,7 +65,7 @@ export function App() {
         onUrlChange={setUrl}
         dir={dir}
         onChooseDir={() => void chooseDir()}
-        fixedDestination={engine?.fixedDestination ?? null}
+        managed={managed}
         format={format}
         onFormatChange={setFormat}
         disabled={busy}

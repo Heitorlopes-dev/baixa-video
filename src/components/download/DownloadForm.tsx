@@ -12,8 +12,8 @@ type Props = {
   onUrlChange: (url: string) => void;
   dir: string;
   onChooseDir: () => void;
-  /** Quando o destino é fixo (Android), mostra onde o arquivo fica em vez do seletor de pasta. */
-  fixedDestination: string | null;
+  /** Destino gerenciado pelo motor (Android): nome da pasta atual e o botão do seletor nativo. */
+  managed: { label: string; pick: () => void; picking: boolean } | null;
   format: FormatId;
   onFormatChange: (format: FormatId) => void;
   /** Download ou atualização em andamento: nada pode mudar. */
@@ -44,7 +44,7 @@ export function DownloadForm(props: Props) {
         />
       </Field>
 
-      {props.fixedDestination === null ? (
+      {props.managed === null ? (
         <Field label="Salvar em" htmlFor={dirId}>
           <div className="flex gap-2">
             {/* min-w-0: sem isso o campo não encolhe e empurra o botão para fora em tela estreita */}
@@ -63,7 +63,17 @@ export function DownloadForm(props: Props) {
       ) : (
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">Salvar em</span>
-          <p className="text-sm opacity-80">Na pasta {props.fixedDestination} do aparelho.</p>
+          <div className="flex items-center gap-2">
+            <p className="min-w-0 flex-1 truncate text-sm opacity-80">{props.managed.label}</p>
+            <Button
+              variant="secondary"
+              className="shrink-0"
+              disabled={props.disabled || props.managed.picking}
+              onClick={props.managed.pick}
+            >
+              Escolher pasta
+            </Button>
+          </div>
         </div>
       )}
 
