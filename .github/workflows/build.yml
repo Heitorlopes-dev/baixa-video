@@ -136,7 +136,10 @@ jobs:
           cache: gradle
           cache-dependency-path: src-tauri/gen/android/**/*.gradle*
 
-      - uses: android-actions/setup-android@v3
+      # v4: a v3 tentava instalar o pacote "tools", que não existe mais nas ferramentas atuais.
+      - uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
 
       - name: SDK e NDK do Android
         run: |
