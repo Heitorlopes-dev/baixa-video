@@ -26,12 +26,37 @@ export const FORMAT_IDS = Object.keys(FORMATS) as FormatId[];
 
 /**
  * Toda chamada ao yt-dlp tem exatamente este número de argumentos.
- * A permissão em src-tauri/capabilities/default.json valida argumento por
- * posição e descarta em silêncio o que passar da lista, então chamadas mais
- * curtas são completadas com PAD (uma flag inofensiva que pode repetir).
+ * A permissão do sidecar (src-tauri/capabilities/default.json, gerada por
+ * scripts/gen-capability.ts a partir daqui) valida argumento por posição e
+ * descarta em silêncio o que passar da lista, então chamadas mais curtas são
+ * completadas com PAD (uma flag inofensiva que pode repetir).
  */
 export const ARGS_LEN = 23;
 const PAD = "--no-playlist";
+
+/** Únicas flags que o app passa ao yt-dlp. Qualquer outra (ex.: --exec) é recusada pela permissão. */
+export const ALLOWED_FLAGS = [
+  "--newline",
+  "--no-playlist",
+  "--no-quiet",
+  "--windows-filenames",
+  "--ffmpeg-location",
+  "--js-runtimes",
+  "-P",
+  "-o",
+  "--print",
+  "-f",
+  "-S",
+  "--merge-output-format",
+  "-x",
+  "--audio-format",
+  "--audio-quality",
+  "-U",
+  "--",
+] as const;
+
+/** Regex de cada posição: uma das flags acima, ou um valor que não começa com "-". */
+export const ARG_VALIDATOR = `^(?:${ALLOWED_FLAGS.join("|")}|[^-].*)$`;
 
 /** Prefixo da linha que o yt-dlp imprime com o caminho final do arquivo. */
 const FILE_PREFIX = "ARQUIVO::";

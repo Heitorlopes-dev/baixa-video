@@ -4,15 +4,16 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "bun run gen:capability && vite",
+    "build": "bun run gen:capability && tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "sidecars": "bash scripts/fetch-sidecars.sh",
     "ok": "bun run check-types && bun test && vite build",
-    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc"
+    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc",
+    "gen:capability": "bun scripts/gen-capability.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

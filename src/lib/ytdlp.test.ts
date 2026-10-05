@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import capability from "../../src-tauri/capabilities/default.json";
+import { capabilityJson } from "../../scripts/gen-capability";
 import {
   ARGS_LEN,
   FORMAT_IDS,
@@ -54,6 +55,10 @@ describe("permissão posicional do sidecar (capabilities/default.json)", () => {
 
   test("a lista de validadores tem exatamente ARGS_LEN posições", () => {
     expect(validators).toHaveLength(ARGS_LEN);
+  });
+
+  test("o JSON commitado é igual ao gerado pelo código (rode `bun run gen:capability`)", () => {
+    expect(capability).toEqual(JSON.parse(capabilityJson()));
   });
 
   const calls = [
