@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { buildArgs, isValidUrl, parseFilePath, parseProgress } from "./ytdlp";
+import capability from "../../src-tauri/capabilities/default.json";
+import {
+  ARGS_LEN,
+  FORMAT_IDS,
+  buildArgs,
+  isValidUrl,
+  parseFilePath,
+  parseFormatCount,
+  parsePhase,
+  parseProgress,
+  updateArgs,
+} from "./ytdlp";
 
 describe("buildArgs", () => {
   test("vídeo: baixa para a pasta, em mp4, com o caminho final impresso", () => {
@@ -15,8 +26,7 @@ describe("buildArgs", () => {
     expect(args.slice(args.indexOf("-P"), args.indexOf("-P") + 2)).toEqual(["-P", "C:\\Users\\x\\Videos"]);
     expect(args).toContain("--merge-output-format");
     expect(args).toContain("res:720,vcodec:h264,acodec:aac");
-    expect(args.at(-2)).toBe("--");
-    expect(args.at(-1)).toBe("https://youtu.be/abc");
+    expect(args[args.indexOf("--") + 1]).toBe("https://youtu.be/abc");
     expect(args[args.indexOf("--print") + 1]).toBe("after_move:ARQUIVO::%(filepath)s");
   });
 
@@ -25,6 +35,55 @@ describe("buildArgs", () => {
     expect(args).toContain("-x");
     expect(args).toContain("mp3");
     expect(args).not.toContain("--merge-output-format");
+  });
+
+  test("a URL vem logo depois de `--`, nunca é cortada pelo preenchimento", () => {
+    for (const format of FORMAT_IDS) {
+      const args = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app" });
+      expect(args[args.indexOf("--") + 1]).toBe("https://x.y/z");
+    }
+  });
+});
+
+describe("permissão posicional do sidecar (capabilities/default.json)", () => {
+  const spawn = capability.permissions.find(
+    (p): p is Extract<typeof p, { identifier: string }> =>
+      typeof p === "object" && p.identifier === "shell:allow-spawn",
+  );
+  const validators = spawn?.allow[0]?.args ?? [];
+
+  test("a lista de validadores tem exatamente ARGS_LEN posições", () => {
+    expect(validators).toHaveLength(ARGS_LEN);
+  });
+
+  const calls = [
+    ...FORMAT_IDS.map((format) => ({
+      name: `download ${format}`,
+      args: buildArgs({ url: "https://www.youtube.com/watch?v=1", dir: "C:\\Vídeos", format, binDir: "C:\\app" }),
+    })),
+    { name: "update", args: updateArgs() },
+  ];
+
+  for (const { name, args } of calls) {
+    test(`${name}: tem ARGS_LEN argumentos e cada um passa no validador da sua posição`, () => {
+      expect(args).toHaveLength(ARGS_LEN);
+      args.forEach((arg, i) => {
+        const v = validators[i];
+        if (typeof v === "string") expect(arg).toBe(v);
+        else expect(new RegExp(v.validator).test(arg)).toBe(true);
+      });
+    });
+  }
+
+  test("os validadores recusam flags perigosas", () => {
+    for (const v of validators) {
+      if (typeof v === "string") continue;
+      const re = new RegExp(v.validator);
+      expect(re.test("--exec")).toBe(false);
+      expect(re.test("--exec-before-download")).toBe(false);
+      expect(re.test("--config-location")).toBe(false);
+      expect(re.test("-a")).toBe(false);
+    }
   });
 });
 
@@ -44,6 +103,22 @@ describe("parseFilePath", () => {
   test("reconhece a linha do --print", () => {
     expect(parseFilePath("ARQUIVO::C:\\Videos\\Título do vídeo.mp4\r")).toBe("C:\\Videos\\Título do vídeo.mp4");
     expect(parseFilePath("[download] Destination: a.mp4")).toBeNull();
+  });
+});
+
+describe("parseFormatCount e parsePhase", () => {
+  test("conta as partes pela lista de formatos", () => {
+    expect(parseFormatCount("[info] jNQXAC9IVRw: Downloading 1 format(s): 133+140")).toBe(2);
+    expect(parseFormatCount("[info] abc: Downloading 1 format(s): 251")).toBe(1);
+    expect(parseFormatCount("[download] Destination: a.mp4")).toBeNull();
+  });
+
+  test("detecta início de parte e fase de conversão", () => {
+    expect(parsePhase("[download] Destination: /x/a.f133.mp4")).toBe("stream");
+    expect(parsePhase("[Merger] Merging formats into \"/x/a.mp4\"")).toBe("convert");
+    expect(parsePhase("[ExtractAudio] Destination: /x/a.mp3")).toBe("convert");
+    expect(parsePhase("[FixupM4a] Correcting container of \"a.m4a\"")).toBe("convert");
+    expect(parsePhase("[download]  45.3% of 1MiB")).toBeNull();
   });
 });
 

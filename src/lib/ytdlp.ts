@@ -24,6 +24,15 @@ export type FormatId = keyof typeof FORMATS;
 
 export const FORMAT_IDS = Object.keys(FORMATS) as FormatId[];
 
+/**
+ * Toda chamada ao yt-dlp tem exatamente este número de argumentos.
+ * A permissão em src-tauri/capabilities/default.json valida argumento por
+ * posição e descarta em silêncio o que passar da lista, então chamadas mais
+ * curtas são completadas com PAD (uma flag inofensiva que pode repetir).
+ */
+export const ARGS_LEN = 23;
+const PAD = "--no-playlist";
+
 /** Prefixo da linha que o yt-dlp imprime com o caminho final do arquivo. */
 const FILE_PREFIX = "ARQUIVO::";
 
@@ -35,8 +44,14 @@ export type DownloadInput = {
   binDir: string;
 };
 
+function padded(args: string[], length: number): string[] {
+  if (args.length > length) throw new Error(`argumentos demais: ${args.length} > ${length}`);
+  return [...args, ...Array<string>(length - args.length).fill(PAD)];
+}
+
+/** O preenchimento fica antes de `--`: depois dele o yt-dlp trata tudo como URL. */
 export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[] {
-  return [
+  const head = [
     "--newline",
     "--no-playlist",
     "--no-quiet",
@@ -52,9 +67,13 @@ export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[]
     "--print",
     `after_move:${FILE_PREFIX}%(filepath)s`,
     ...FORMATS[format].args,
-    "--",
-    url.trim(),
   ];
+  return [...padded(head, ARGS_LEN - 2), "--", url.trim()];
+}
+
+/** Argumentos de "Atualizar yt-dlp": o próprio binário se substitui. */
+export function updateArgs(): string[] {
+  return padded(["-U"], ARGS_LEN);
 }
 
 const PROGRESS = /\[download\]\s+(\d{1,3}(?:\.\d+)?)%/;
@@ -70,6 +89,25 @@ export function parseProgress(line: string): number | null {
 export function parseFilePath(line: string): string | null {
   const trimmed = line.trim();
   return trimmed.startsWith(FILE_PREFIX) ? trimmed.slice(FILE_PREFIX.length) : null;
+}
+
+const FORMATS_LINE = /Downloading \d+ format\(s\): (\S+)/;
+
+/** Quantas partes serão baixadas (vídeo+áudio = 2), lido da linha "[info] ... format(s): 133+140". */
+export function parseFormatCount(line: string): number | null {
+  const match = FORMATS_LINE.exec(line);
+  return match ? match[1].split("+").length : null;
+}
+
+const CONVERT_LINE = /^\[(Merger|ExtractAudio|VideoConvertor|VideoRemuxer|Fixup\w+)\]/;
+
+export type Phase = "stream" | "convert";
+
+/** "stream" quando começa o download de mais uma parte; "convert" quando o ffmpeg assume. */
+export function parsePhase(line: string): Phase | null {
+  if (line.startsWith("[download] Destination:")) return "stream";
+  if (CONVERT_LINE.test(line)) return "convert";
+  return null;
 }
 
 export function isValidUrl(value: string): boolean {

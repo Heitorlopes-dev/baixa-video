@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Janela principal: roda o yt-dlp como sidecar, escolhe pasta e abre o arquivo baixado",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "opener:default",
@@ -10,7 +12,83 @@
     "shell:allow-kill",
     {
       "identifier": "shell:allow-spawn",
-      "allow": [{ "name": "binaries/yt-dlp", "sidecar": true, "args": true }]
+      "allow": [
+        {
+          "name": "binaries/yt-dlp",
+          "sidecar": true,
+          "args": [
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -58,9 +58,14 @@ O mesmo instalador sai do workflow `.github/workflows/build.yml` num runner Wind
   e o caminho final do arquivo da saída. Puro, testado com `bun test`.
 - `src/App.tsx`: a tela. Dispara o sidecar com `@tauri-apps/plugin-shell`, escolhe
   pasta com `plugin-dialog` e abre o arquivo no Explorer com `plugin-opener`.
-- `src-tauri/src/lib.rs`: um comando que devolve a pasta do executável, para o
-  yt-dlp achar o ffmpeg e o deno que foram instalados junto.
-- `src-tauri/capabilities/default.json`: permissões. O front só pode executar o
-  sidecar `yt-dlp`, nada mais.
+- `src-tauri/src/lib.rs`: `bin_dir` devolve a pasta do executável, para o yt-dlp
+  achar o ffmpeg e o deno instalados junto; `kill_tree` encerra o yt-dlp e os
+  filhos dele (ffmpeg) quando a pessoa cancela.
 - `scripts/fetch-sidecars.sh`: baixa os binários com o sufixo de alvo que o Tauri
-  exige em `externalBin`.
+  exige em `externalBin`. Versões fixas no topo do script, com SHA-256 conferido,
+  para duas builds da mesma tag saírem iguais. Para subir uma versão: edite a
+  variável, rode com `CHECK=0`, copie os hashes impressos para a tabela.
+- `src-tauri/capabilities/default.json`: a permissão do sidecar valida cada
+  argumento pela posição e descarta o que passar da lista, então toda chamada ao
+  yt-dlp tem exatamente `ARGS_LEN` argumentos (as mais curtas são completadas com
+  `--no-playlist` repetido). O teste em `src/lib/ytdlp.test.ts` lê o JSON e trava isso.
