@@ -89,6 +89,8 @@ plataformas no `latest.json` (`scripts/release-manifest.ts`) e publica:
 
 - `git tag v0.1.0 && git push --tags` → cria a Release com o `.exe` anexado.
 - Rodar o workflow à mão pela aba Actions → o `.exe` fica como artefato do job.
+- Push na `main` → build completo sem publicar: testa tudo que entrou e deixa o cache de
+  compilação pronto para a próxima tag, que assim não compila as dependências do zero.
 
 ## Atualização automática
 

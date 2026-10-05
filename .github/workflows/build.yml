@@ -5,10 +5,16 @@ name: build
 # final que junta as duas plataformas no latest.json que o app consulta.
 # - Em push de tag v*: cria a Release com os instaladores e o latest.json.
 #   A tag precisa ser v + a versão do src-tauri/tauri.conf.json (o script confere).
+# - Em push na main: build completo sem publicar. Serve de CI de tudo que entra
+#   na main e deixa o cache de compilação salvo nela: o GitHub só deixa uma tag
+#   ler o cache dela mesma ou o da branch padrão, então sem isto toda release
+#   compilava do zero. Push só de *.md não dispara.
 # - Manualmente (workflow_dispatch): só deixa os arquivos como artefato.
 on:
   push:
+    branches: [main]
     tags: ["v*"]
+    paths-ignore: ["**.md"]
   workflow_dispatch:
 
 permissions:
