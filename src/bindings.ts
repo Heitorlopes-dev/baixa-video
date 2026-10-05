@@ -35,9 +35,19 @@ export const commands = {
 	engineWatchShared: (onShared: Channel<SharedText>) => typedError<null, EngineError>(__TAURI_INVOKE("engine_watch_shared", { onShared })),
 	/**  Última versão publicada (Android: o atualizador do Tauri não existe lá). */
 	engineLatestRelease: () => typedError<LatestRelease, EngineError>(__TAURI_INVOKE("engine_latest_release")),
+	/**  Para onde os arquivos vão (Android). */
+	engineDestination: () => typedError<Destination, EngineError>(__TAURI_INVOKE("engine_destination")),
+	/**  Abre o seletor de pastas do Android; cancelar mantém o destino atual. */
+	enginePickFolder: () => typedError<Destination, EngineError>(__TAURI_INVOKE("engine_pick_folder")),
 };
 
 /* Types */
+/**  Para onde os arquivos vão no Android: a pasta escolhida no seletor (`custom`) ou o padrão. */
+export type Destination = {
+	label: string,
+	custom: boolean,
+};
+
 /**  Um download: identificador (para cancelar), link e os argumentos do yt-dlp já montados pela tela. */
 export type DownloadRequest = {
 	id: string,

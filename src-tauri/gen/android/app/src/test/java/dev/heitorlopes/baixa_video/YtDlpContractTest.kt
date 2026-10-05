@@ -41,6 +41,8 @@ class YtDlpContractTest {
             LatestReleaseReply("0.4.0", "https://github.com/Heitorlopes-dev/baixa-video/releases/download/v0.4.0/Baixa-Video_0.4.0_arm64.apk"),
         )
         assertMatches("latest-release-sem-apk.json", LatestReleaseReply("0.3.0", null))
+        assertMatches("destination.json", DestinationReply("Movies/Baixa", true))
+        assertMatches("destination-default.json", DestinationReply(DEFAULT_DESTINATION, false))
     }
 
     @Test
