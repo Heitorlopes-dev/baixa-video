@@ -85,6 +85,8 @@ dependencies {
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
     implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
     testImplementation("junit:junit:4.13.2")
+    // Mesma versão do Jackson que o Tauri usa no Android: o teste de contrato serializa como ele.
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.3")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }

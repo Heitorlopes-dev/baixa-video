@@ -1,5 +1,6 @@
 #[cfg(target_os = "android")]
 mod android;
+mod engine;
 
 #[cfg(any(desktop, test))]
 use specta_typescript::Typescript;
@@ -59,7 +60,16 @@ fn is_appimage() -> bool {
 /// Comandos que a tela pode chamar. As funções TypeScript em src/bindings.ts são
 /// geradas daqui (tauri-specta): nome, parâmetros e retorno vêm do Rust.
 fn commands() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![bin_dir, kill_tree, is_appimage])
+    Builder::<tauri::Wry>::new().commands(collect_commands![
+        bin_dir,
+        kill_tree,
+        is_appimage,
+        engine::platform,
+        engine::engine_start,
+        engine::engine_cancel,
+        engine::engine_update,
+        engine::engine_version
+    ])
 }
 
 #[cfg(any(desktop, test))]
