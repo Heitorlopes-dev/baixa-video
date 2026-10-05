@@ -11,11 +11,14 @@
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "sidecars": "bash scripts/fetch-sidecars.sh",
-    "ok": "bun run check-types && bun test && vite build",
+    "ok": "bun run format:check && bun run lint && bun run check-types && bun test && vite build",
     "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis",
     "gen:capability": "bun scripts/gen-capability.ts",
     "build:linux": "tauri build --bundles appimage",
-    "gen:bindings": "cargo test --manifest-path src-tauri/Cargo.toml export_bindings"
+    "gen:bindings": "cargo test --manifest-path src-tauri/Cargo.toml export_bindings",
+    "lint": "oxlint --deny-warnings",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
@@ -29,12 +32,15 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@tailwindcss/vite": "^4.3.3",
     "@tauri-apps/cli": "^2",
     "@types/bun": "^1.4.2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^6.0.2",
+    "oxlint": "^1.87.0",
+    "oxlint-tsgolint": "^7.0.2003",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "vite": "^8.0.16"

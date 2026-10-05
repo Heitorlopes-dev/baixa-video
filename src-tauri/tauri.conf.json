@@ -26,29 +26,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "nsis",
-      "appimage"
-    ],
-    "externalBin": [
-      "binaries/yt-dlp",
-      "binaries/ffmpeg",
-      "binaries/ffprobe",
-      "binaries/deno"
-    ],
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "targets": ["nsis", "appimage"],
+    "externalBin": ["binaries/yt-dlp", "binaries/ffmpeg", "binaries/ffprobe", "binaries/deno"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "windows": {
       "nsis": {
         "installMode": "currentUser",
-        "languages": [
-          "PortugueseBR"
-        ],
+        "languages": ["PortugueseBR"],
         "displayLanguageSelector": false
       }
     },
@@ -57,9 +41,7 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVCMkREQzYzOTZBRDJFN0UKUldSK0xxMldZOXd0NjdmOFpFQjROVDdERzA4emJ4bWkreHIrT1J0TFFsbTJiazBNUVVHaW93Mi8K",
-      "endpoints": [
-        "https://github.com/Heitorlopes-dev/baixa-video/releases/latest/download/latest.json"
-      ],
+      "endpoints": ["https://github.com/Heitorlopes-dev/baixa-video/releases/latest/download/latest.json"],
       "windows": {
         "installMode": "passive"
       }

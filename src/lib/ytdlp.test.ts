@@ -100,7 +100,7 @@ describe("parseProgress", () => {
 
   test("ignora outras linhas", () => {
     expect(parseProgress("[youtube] abc: Downloading webpage")).toBeNull();
-    expect(parseProgress("[Merger] Merging formats into \"a.mp4\"")).toBeNull();
+    expect(parseProgress('[Merger] Merging formats into "a.mp4"')).toBeNull();
   });
 });
 
@@ -120,9 +120,9 @@ describe("parseFormatCount e parsePhase", () => {
 
   test("detecta início de parte e fase de conversão", () => {
     expect(parsePhase("[download] Destination: /x/a.f133.mp4")).toBe("stream");
-    expect(parsePhase("[Merger] Merging formats into \"/x/a.mp4\"")).toBe("convert");
+    expect(parsePhase('[Merger] Merging formats into "/x/a.mp4"')).toBe("convert");
     expect(parsePhase("[ExtractAudio] Destination: /x/a.mp3")).toBe("convert");
-    expect(parsePhase("[FixupM4a] Correcting container of \"a.m4a\"")).toBe("convert");
+    expect(parsePhase('[FixupM4a] Correcting container of "a.m4a"')).toBe("convert");
     expect(parsePhase("[download]  45.3% of 1MiB")).toBeNull();
   });
 });

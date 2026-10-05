@@ -9,7 +9,8 @@ import { UpdateBanner } from "./UpdateBanner";
 import { useCanUpdateYtDlp } from "./hooks/useUpdater";
 import { useDownload } from "./hooks/useDownload";
 
-const INPUT = "rounded-md border border-neutral-400/50 bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100";
+const INPUT =
+  "rounded-md border border-neutral-400/50 bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100";
 
 export function App() {
   const [url, setUrl] = useState("");
@@ -31,7 +32,7 @@ export function App() {
   // Sincroniza o DOM: o painel de detalhes acompanha a última linha.
   useEffect(() => {
     const pre = logRef.current;
-    if (pre) pre.scrollTop = pre.scrollHeight;
+    if (pre && state.log.length > 0) pre.scrollTop = pre.scrollHeight;
   }, [state.log]);
 
   async function chooseDir() {
@@ -73,7 +74,12 @@ export function App() {
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">Salvar em</span>
         <div className="flex gap-2">
-          <input className={`${INPUT} flex-1 px-3 py-2 opacity-80`} value={dir} readOnly placeholder="Escolha uma pasta" />
+          <input
+            className={`${INPUT} flex-1 px-3 py-2 opacity-80`}
+            value={dir}
+            readOnly
+            placeholder="Escolha uma pasta"
+          />
           <button
             type="button"
             className="rounded-md border border-neutral-400/50 px-3 py-2 hover:bg-neutral-500/10 disabled:opacity-50"

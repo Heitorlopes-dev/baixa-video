@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { type DownloadEvent, type DownloadState, MAX_LOG, downloadReducer, initialState, isBusy, isDownloading } from "./download";
+import {
+  type DownloadEvent,
+  type DownloadState,
+  MAX_LOG,
+  downloadReducer,
+  initialState,
+  isBusy,
+  isDownloading,
+} from "./download";
 
 const run = (events: DownloadEvent[], from: DownloadState = initialState) => events.reduce(downloadReducer, from);
 const out = (line: string): DownloadEvent => ({ type: "stdout", line });
@@ -17,7 +25,14 @@ const VIDEO_LINES = [
 
 describe("download de vídeo", () => {
   test("começa limpo, mas mantém o painel de detalhes como a pessoa deixou", () => {
-    const sujo: DownloadState = { ...initialState, status: "erro", progress: 40, filePath: "/a.mp4", log: ["x"], logOpen: true };
+    const sujo: DownloadState = {
+      ...initialState,
+      status: "erro",
+      progress: 40,
+      filePath: "/a.mp4",
+      log: ["x"],
+      logOpen: true,
+    };
     expect(run([{ type: "download-start" }], sujo)).toEqual({ ...initialState, status: "baixando", logOpen: true });
   });
 
@@ -56,7 +71,12 @@ describe("download de vídeo", () => {
 
 describe("cancelar", () => {
   test("termina como 'cancelado', não como erro, mesmo com código de saída ruim", () => {
-    const s = run([{ type: "download-start" }, ...VIDEO_LINES.map(out), { type: "cancel" }, { type: "exit", code: null }]);
+    const s = run([
+      { type: "download-start" },
+      ...VIDEO_LINES.map(out),
+      { type: "cancel" },
+      { type: "exit", code: null },
+    ]);
     expect(s.status).toBe("cancelado");
     expect(s.cancelling).toBe(false);
     expect(s.log.at(-1)).toBe("cancelado pelo usuário");
@@ -88,7 +108,11 @@ describe("cancelar", () => {
 
 describe("atualizar o yt-dlp", () => {
   test("abre o painel e não mexe em progresso com a saída do -U", () => {
-    const s = run([{ type: "update-start" }, out("[download] 100% of 17.00MiB"), out("Updated yt-dlp to stable@2026.09.01")]);
+    const s = run([
+      { type: "update-start" },
+      out("[download] 100% of 17.00MiB"),
+      out("Updated yt-dlp to stable@2026.09.01"),
+    ]);
     expect(s.status).toBe("atualizando");
     expect(s.logOpen).toBe(true);
     expect(s.progress).toBe(0);
@@ -130,7 +154,15 @@ describe("falhas e log", () => {
   test("nunca altera o estado recebido", () => {
     const antes = run([{ type: "download-start" }, ...VIDEO_LINES.map(out)]);
     const copia = structuredClone(antes);
-    run([out("[Merger] Merging formats into \"a.mp4\""), { type: "cancel" }, { type: "exit", code: 0 }, { type: "toggle-log" }], antes);
+    run(
+      [
+        out('[Merger] Merging formats into "a.mp4"'),
+        { type: "cancel" },
+        { type: "exit", code: 0 },
+        { type: "toggle-log" },
+      ],
+      antes,
+    );
     expect(antes).toEqual(copia);
   });
 });

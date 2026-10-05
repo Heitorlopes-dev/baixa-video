@@ -16,7 +16,9 @@ if (!repo) throw new Error("informe dono/repositorio (ou rode no GitHub Actions)
 
 const tag = process.env.GITHUB_REF_TYPE === "tag" ? process.env.GITHUB_REF_NAME : undefined;
 if (tag !== undefined && !tagMatchesVersion(tag, version)) {
-  throw new Error(`a tag ${tag} não bate com a versão ${version} do tauri.conf.json: suba a versão antes de criar a tag`);
+  throw new Error(
+    `a tag ${tag} não bate com a versão ${version} do tauri.conf.json: suba a versão antes de criar a tag`,
+  );
 }
 
 const files = await readdir(out);
