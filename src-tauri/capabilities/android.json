@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "android",
+  "description": "Janela principal no Android. Sem sidecar, atualizador nem reinício: no Android o yt-dlp roda pelo plugin Kotlin.",
+  "windows": ["main"],
+  "platforms": ["android"],
+  "permissions": ["core:default", "opener:default", "dialog:default"]
+}

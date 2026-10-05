@@ -74,17 +74,24 @@ fn export_bindings(builder: &Builder<tauri::Wry>) {
 pub fn run() {
     let builder = commands();
 
-    // Em `tauri dev` o arquivo se regenera sozinho a cada execução.
-    #[cfg(debug_assertions)]
+    // Em `tauri dev` no desktop o arquivo se regenera sozinho a cada execução.
+    // No celular não: o caminho é desta máquina de desenvolvimento e não existe
+    // lá, e a falha ao gravar derrubava o app logo ao abrir.
+    #[cfg(all(debug_assertions, desktop))]
     export_bindings(&builder);
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_opener::init());
+
+    // Atualização automática e reinício só existem no desktop.
+    #[cfg(desktop)]
+    let app = app
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init())
-        .invoke_handler(builder.invoke_handler())
+        .plugin(tauri_plugin_process::init());
+
+    app.invoke_handler(builder.invoke_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -22,8 +22,6 @@ tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 specta = "=2.0.0-rc.25"
 specta-typescript = "=0.0.12"
@@ -36,3 +34,8 @@ lto = true
 opt-level = 3
 panic = "abort"
 strip = true
+
+# Só existem no desktop: no Android a atualização vem de outro jeito e não há processo para reiniciar.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"

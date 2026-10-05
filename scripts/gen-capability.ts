@@ -10,6 +10,7 @@ export function capabilityJson(): string {
     description:
       "Janela principal: roda o yt-dlp como sidecar, escolhe pasta, abre o arquivo baixado e instala atualizações do app. Gerado por scripts/gen-capability.ts; não edite à mão.",
     windows: ["main"],
+    platforms: ["linux", "windows", "macOS"],
     permissions: [
       "core:default",
       "opener:default",
