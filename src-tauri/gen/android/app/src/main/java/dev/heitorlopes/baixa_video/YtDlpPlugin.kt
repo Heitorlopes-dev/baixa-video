@@ -114,6 +114,17 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
     private fun workDir(): String =
         (activity.getExternalFilesDir("baixando") ?: File(activity.filesDir, "baixando")).also { it.mkdirs() }.absolutePath
 
+    /**
+     * QuickJS-NG empacotado no APK (scripts/fetch-sidecars.sh aarch64-linux-android), cerca de
+     * 2x mais rápido no desafio do YouTube que o QuickJS da biblioteca. Vai depois do
+     * --js-runtimes que a biblioteca põe, então é ele que vale. Sem o arquivo (outra
+     * arquitetura), fica o da biblioteca.
+     */
+    private fun quickJsNgArgs(): List<String> {
+        val binary = File(activity.applicationInfo.nativeLibraryDir, "libqjsng.so")
+        return if (binary.exists()) listOf("--js-runtimes", "quickjs:${binary.absolutePath}") else emptyList()
+    }
+
     /** Cache do yt-dlp: guarda a solução do desafio do YouTube entre um vídeo e outro. */
     private fun cacheDir(): String = File(activity.cacheDir, "yt-dlp").also { it.mkdirs() }.absolutePath
 
@@ -178,6 +189,7 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
                     .addOption("--cache-dir", cacheDir())
                     .addCommands(
                         listOf("-P", workDir(), "--print-to-file", "after_move:%(filepath)s", finalPath.absolutePath) +
+                            quickJsNgArgs() +
                             request.args,
                     )
                 val exit = YoutubeDL.getInstance().execute(ytdlp, request.id) { progress, _, line ->

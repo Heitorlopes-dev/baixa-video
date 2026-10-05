@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Baixa yt-dlp, ffmpeg, ffprobe e deno para src-tauri/binaries com o sufixo do
-# alvo, que é o nome que o Tauri exige para externalBin.
+# alvo, que é o nome que o Tauri exige para externalBin. Com o alvo
+# aarch64-linux-android, baixa só o QuickJS-NG para o APK (veja abaixo).
 # Versões fixas e SHA-256 conferido: duas builds da mesma tag saem iguais.
 # Para atualizar: troque a versão, rode uma vez com CHECK=0, copie os hashes
 # que o script imprime para a tabela abaixo e confira a origem.
@@ -12,8 +13,31 @@ FFMPEG_TAG="autobuild-2026-10-02-22-56"
 FFMPEG_BUILD="N-127117-g98e92563a3"
 DENO_VERSION="v2.9.7"
 
+QUICKJS_NG_VERSION="v0.17.0"
+SHA_QUICKJS_NG_AARCH64="3372133484edf50a69f3c67903af41206d22a061e930e3cfb63269272ef56d2e"
+
 TARGET="${1:-$(rustc -vV | sed -n 's/^host: //p')}"
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/src-tauri/binaries"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Android: Python, yt-dlp e ffmpeg vêm da youtubedl-android (Gradle). Daqui sai só o
+# QuickJS-NG, cerca de 2x mais rápido que o QuickJS da biblioteca no desafio do YouTube.
+# Vai para jniLibs com nome lib*.so: é o único jeito de o Android deixar executar.
+if [ "$TARGET" = "aarch64-linux-android" ]; then
+	JNI="$ROOT/src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a"
+	mkdir -p "$JNI"
+	echo "QuickJS-NG $QUICKJS_NG_VERSION ($TARGET)"
+	curl -fsSL -o "$JNI/libqjsng.so" "https://github.com/quickjs-ng/quickjs/releases/download/$QUICKJS_NG_VERSION/qjs-linux-aarch64"
+	actual="$(sha256sum "$JNI/libqjsng.so" | cut -d' ' -f1)"
+	echo "  sha256 libqjsng.so = $actual"
+	if [ "${CHECK:-1}" = "1" ] && [ "$actual" != "$SHA_QUICKJS_NG_AARCH64" ]; then
+		echo "HASH DIFERENTE em libqjsng.so (esperado $SHA_QUICKJS_NG_AARCH64)" >&2; exit 1
+	fi
+	chmod +x "$JNI/libqjsng.so"
+	ls -la "$JNI"
+	exit 0
+fi
+
+DIR="$ROOT/src-tauri/binaries"
 mkdir -p "$DIR"
 
 case "$TARGET" in
