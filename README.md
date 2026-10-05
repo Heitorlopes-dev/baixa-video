@@ -15,6 +15,10 @@ Stack: Tauri 2 (Rust mínimo) + React + TypeScript + Tailwind, gerenciado com Bu
 3. Cole o link, escolha a pasta e o formato, clique em **Baixar**.
 4. Se o YouTube mudar algo e o download parar de funcionar, clique em
    **Atualizar yt-dlp** e tente de novo.
+5. Quando sair uma versão nova do app, aparece uma faixa azul no topo da janela.
+   Clique em **Atualizar agora**: ele baixa, instala e abre a versão nova.
+   (Quem tem a 0.1.0 precisa instalar a próxima à mão uma vez: a atualização
+   automática chegou depois dela.)
 
 ## Para quem vai mexer no código
 
@@ -38,10 +42,14 @@ Depois:
 
 ```bash
 bun run sidecars x86_64-pc-windows-msvc   # yt-dlp.exe, ffmpeg.exe, ffprobe.exe, deno.exe
+export TAURI_SIGNING_PRIVATE_KEY=~/.tauri/baixa-video.key
+read -rs TAURI_SIGNING_PRIVATE_KEY_PASSWORD && export TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 bun run build:win                         # cargo-xwin compila para Windows; na 1ª vez baixa o SDK (1,5 GB)
 ```
 
-O instalador sai em `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`.
+O build assina o instalador para a atualização automática, então precisa da
+chave privada (veja abaixo). O instalador sai em
+`src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`.
 Ele não é assinado: o Windows SmartScreen avisa "editor desconhecido" na primeira
 execução, e a pessoa clica em "Mais informações" e "Executar assim mesmo".
 
@@ -51,6 +59,23 @@ O mesmo instalador sai do workflow `.github/workflows/build.yml` num runner Wind
 
 - `git tag v0.1.0 && git push --tags` → cria a Release com o `.exe` anexado.
 - Rodar o workflow à mão pela aba Actions → o `.exe` fica como artefato do job.
+
+## Atualização automática
+
+O app usa o plugin de atualização do Tauri. Ao abrir, ele lê
+`https://github.com/Heitorlopes-dev/baixa-video/releases/latest/download/latest.json`
+e, se a versão de lá for maior, mostra a faixa "Atualizar agora". O instalador baixado
+só é aceito se a assinatura bater com a chave pública que está no `tauri.conf.json`.
+
+- **Chave privada**: `~/.tauri/baixa-video.key`, com senha. Guardada fora do git (gerenciador
+  de senhas) e nos secrets `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+  do repositório. Se ela se perder, os apps instalados não aceitam mais atualização e cada
+  pessoa precisa reinstalar à mão uma vez com uma chave nova.
+- **Lançar uma versão**: suba `version` em `src-tauri/tauri.conf.json` (e, para manter em dia,
+  em `package.json` e `src-tauri/Cargo.toml`), faça o merge na `main` e crie a tag com a
+  mesma versão: `git tag v0.2.0 && git push --tags`. O workflow monta o instalador assinado
+  e o `latest.json` (`scripts/release-files.ts`) e publica os dois na Release. Se a tag não
+  bater com a versão, o workflow falha antes de publicar.
 
 ## Como funciona
 

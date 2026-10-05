@@ -25,3 +25,6 @@ dist-ssr
 
 # Binários baixados por scripts/fetch-sidecars.sh
 src-tauri/binaries/
+
+# Instalador e latest.json montados por scripts/release-files.ts
+release/

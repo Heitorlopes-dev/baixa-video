@@ -1,8 +1,9 @@
 name: build
 
-# Gera o instalador .exe num runner Windows.
-# - Em push de tag v*: cria a Release no GitHub com o instalador anexado.
-# - Manualmente (workflow_dispatch): só deixa o instalador como artefato do job.
+# Gera o instalador .exe num runner Windows, assinado para a atualização automática.
+# - Em push de tag v*: cria a Release com o instalador e o latest.json que o app consulta.
+#   A tag precisa ser v + a versão do src-tauri/tauri.conf.json (o script confere).
+# - Manualmente (workflow_dispatch): só deixa os arquivos como artefato do job.
 on:
   push:
     tags: ["v*"]
@@ -34,22 +35,28 @@ jobs:
           bun test
           bun run check-types
 
-      - name: Baixa yt-dlp, ffmpeg e ffprobe
+      - name: Baixa yt-dlp, ffmpeg, ffprobe e deno
         shell: bash
         run: scripts/fetch-sidecars.sh x86_64-pc-windows-msvc
 
-      - name: Build do instalador
+      - name: Build do instalador (assinado)
         run: bun run tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Instalador com nome fixo e latest.json
+        run: bun scripts/release-files.ts
 
       - uses: actions/upload-artifact@v4
         with:
           name: baixa-video-windows
-          path: src-tauri/target/release/bundle/nsis/*.exe
+          path: release/
           if-no-files-found: error
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/release/bundle/nsis/*.exe
+          files: release/*
           generate_release_notes: true

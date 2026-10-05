@@ -16,6 +16,7 @@ import {
   updateArgs,
   type FormatId,
 } from "./lib/ytdlp";
+import { UpdateBanner } from "./UpdateBanner";
 
 type Status = "parado" | "baixando" | "convertendo" | "concluido" | "erro" | "cancelado" | "atualizando";
 
@@ -167,6 +168,7 @@ export function App() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-5 px-6 py-6">
+      <UpdateBanner disabled={busy} />
       <header>
         <h1 className="text-2xl font-semibold">Baixa Vídeo</h1>
         <p className="text-sm opacity-70">Cole o link, escolha a pasta e o formato, e clique em Baixar.</p>

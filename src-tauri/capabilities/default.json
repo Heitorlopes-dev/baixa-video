@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Janela principal: roda o yt-dlp como sidecar, escolhe pasta e abre o arquivo baixado. Gerado por scripts/gen-capability.ts; não edite à mão.",
+  "description": "Janela principal: roda o yt-dlp como sidecar, escolhe pasta, abre o arquivo baixado e instala atualizações do app. Gerado por scripts/gen-capability.ts; não edite à mão.",
   "windows": [
     "main"
   ],
@@ -10,6 +10,8 @@
     "opener:default",
     "dialog:default",
     "shell:allow-kill",
+    "updater:default",
+    "process:allow-restart",
     {
       "identifier": "shell:allow-spawn",
       "allow": [
