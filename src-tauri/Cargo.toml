@@ -1,6 +1,6 @@
 [package]
 name = "baixa-video"
-version = "0.1.0"
+version = "0.2.0"
 description = "Baixa vídeos e áudios a partir de um link, usando o yt-dlp por baixo"
 authors = ["Heitor"]
 edition = "2021"
