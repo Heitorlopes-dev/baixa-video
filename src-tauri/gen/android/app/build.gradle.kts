@@ -20,7 +20,8 @@ android {
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "dev.heitorlopes.baixa_video"
-        minSdk = 24
+        // Android 10: grava em Downloads pelo MediaStore sem pedir permissão de armazenamento.
+        minSdk = 29
         targetSdk = 37
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")

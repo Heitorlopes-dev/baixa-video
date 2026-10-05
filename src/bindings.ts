@@ -26,6 +26,8 @@ export const commands = {
 	engineCancel: (id: string) => typedError<boolean, EngineError>(__TAURI_INVOKE("engine_cancel", { id })),
 	engineUpdate: () => typedError<UpdateResult, EngineError>(__TAURI_INVOKE("engine_update")),
 	engineVersion: () => typedError<string, EngineError>(__TAURI_INVOKE("engine_version")),
+	/**  Abre o arquivo baixado no app que o usuário escolher (Android). */
+	engineOpen: (uri: string) => typedError<null, EngineError>(__TAURI_INVOKE("engine_open", { uri })),
 };
 
 /* Types */
@@ -46,7 +48,9 @@ export type EngineError =
  *  O que chega pelo canal durante um download: uma linha do yt-dlp ou o fim.
  *  `code` nulo quer dizer que o processo não terminou sozinho (cancelado).
  */
-export type EngineEvent = { kind: "line"; text: string; stream: Stream } | { kind: "exit"; code: number | null };
+export type EngineEvent = { kind: "line"; text: string; stream: Stream } | 
+/**  O arquivo pronto foi publicado num lugar que o usuário vê (Android: Downloads/BaixaVideo). */
+{ kind: "saved"; uri: string; name: string } | { kind: "exit"; code: number | null };
 
 export type Platform = "desktop" | "android";
 

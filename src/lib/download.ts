@@ -40,6 +40,8 @@ export type DownloadEvent =
   | { type: "stdout"; line: string }
   /** Linha só para o log (stderr, o comando executado, avisos). */
   | { type: "log"; line: string }
+  /** O arquivo pronto foi publicado num lugar que o usuário vê (Android: Downloads). */
+  | { type: "saved"; path: string }
   | { type: "cancel" }
   | { type: "exit"; code: number | null }
   /** O processo nem chegou a rodar, ou a ponte com o Rust falhou. */
@@ -119,6 +121,8 @@ export function downloadReducer(state: DownloadState, event: DownloadEvent): Dow
     }
     case "log":
       return { ...state, log: appendLog(state.log, event.line) };
+    case "saved":
+      return isDownloading(state) ? { ...state, filePath: event.path } : state;
     case "cancel":
       return isDownloading(state) && !state.cancelling
         ? { ...state, cancelling: true, log: appendLog(state.log, "cancelado pelo usuário") }

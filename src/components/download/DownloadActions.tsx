@@ -8,9 +8,11 @@ type Props = {
   onStart: () => void;
   onCancel: () => void;
   onOpenFolder: (filePath: string) => void;
+  /** "Abrir pasta" no desktop, "Abrir" no Android. */
+  openLabel: string;
 };
 
-export function DownloadActions({ state, canStart, onStart, onCancel, onOpenFolder }: Props) {
+export function DownloadActions({ state, canStart, onStart, onCancel, onOpenFolder, openLabel }: Props) {
   const file = readyFile(state);
 
   return (
@@ -26,7 +28,7 @@ export function DownloadActions({ state, canStart, onStart, onCancel, onOpenFold
       )}
       {file !== null && (
         <Button variant="secondary" onClick={() => onOpenFolder(file)}>
-          Abrir pasta
+          {openLabel}
         </Button>
       )}
       <span className="ml-auto text-sm opacity-70">{statusLabel(state)}</span>

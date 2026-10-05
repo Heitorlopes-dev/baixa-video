@@ -16,6 +16,7 @@ export function useDownload(engine: Engine | undefined) {
   const handlers: JobHandlers = {
     stdout: (line) => dispatch({ type: "stdout", line }),
     log: (line) => dispatch({ type: "log", line }),
+    saved: (path) => dispatch({ type: "saved", path }),
   };
 
   async function run(startJob: (h: JobHandlers) => Promise<Job>): Promise<void> {

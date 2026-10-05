@@ -38,6 +38,8 @@ pub enum Stream {
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum EngineEvent {
     Line { text: String, stream: Stream },
+    /// O arquivo pronto foi publicado num lugar que o usuário vê (Android: Downloads/BaixaVideo).
+    Saved { uri: String, name: String },
     Exit { code: Option<i32> },
 }
 
@@ -81,6 +83,21 @@ pub(crate) struct CancelReply {
     pub cancelled: bool,
 }
 
+// Pedidos do Rust para o Kotlin além do download.
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CancelRequest {
+    pub id: String,
+}
+
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct OpenRequest {
+    pub uri: String,
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn platform() -> Platform {
@@ -119,6 +136,13 @@ pub async fn engine_version(app: AppHandle) -> Result<String, EngineError> {
     backend::version(&app)
 }
 
+/// Abre o arquivo baixado no app que o usuário escolher (Android).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_open(app: AppHandle, uri: String) -> Result<(), EngineError> {
+    backend::open(&app, uri)
+}
+
 #[cfg(target_os = "android")]
 use crate::android as backend;
 
@@ -137,6 +161,9 @@ mod backend {
         Err(EngineError::Unsupported)
     }
     pub fn version(_: &AppHandle) -> Result<String, EngineError> {
+        Err(EngineError::Unsupported)
+    }
+    pub fn open(_: &AppHandle, _: String) -> Result<(), EngineError> {
         Err(EngineError::Unsupported)
     }
 }
@@ -167,6 +194,9 @@ mod tests {
         round_trip::<EngineEvent>("event-line-stderr.json");
         round_trip::<EngineEvent>("event-exit.json");
         round_trip::<EngineEvent>("event-exit-canceled.json");
+        round_trip::<EngineEvent>("event-saved.json");
+        round_trip::<CancelRequest>("cancel-request.json");
+        round_trip::<OpenRequest>("open-request.json");
         round_trip::<UpdateResult>("update-done.json");
         round_trip::<UpdateResult>("update-up-to-date.json");
         round_trip::<VersionReply>("version.json");

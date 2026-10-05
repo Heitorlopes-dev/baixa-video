@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { DownloadActions } from "./components/download/DownloadActions";
 import { DownloadForm } from "./components/download/DownloadForm";
 import { LogPanel } from "./components/download/LogPanel";
@@ -17,8 +16,9 @@ import { type FormatId, isValidUrl } from "./lib/ytdlp";
 export function App() {
   const [url, setUrl] = useState("");
   const [chosenDir, setChosenDir] = useState<string | null>(null);
+  const engine = useEngine();
   const [format, setFormat] = useState<FormatId>("melhor");
-  const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(useEngine());
+  const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(engine);
   const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
   const { data: defaultDir = "" } = useQuery({
     queryKey: ["download-dir"],
@@ -63,7 +63,8 @@ export function App() {
         canStart={canStart}
         onStart={startDownload}
         onCancel={() => void cancel()}
-        onOpenFolder={(path) => void revealItemInDir(path)}
+        onOpenFolder={(path) => void engine?.open(path)}
+        openLabel={engine?.openLabel ?? "Abrir pasta"}
       />
 
       <ProgressBar state={state} />

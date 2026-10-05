@@ -20,6 +20,10 @@ export function routeEvent(event: EngineEvent, handlers: JobHandlers): { exit: n
     case "line":
       (event.stream === "stdout" ? handlers.stdout : handlers.log)(event.text);
       return null;
+    case "saved":
+      handlers.saved(event.uri);
+      handlers.log(`salvo em Downloads/BaixaVideo: ${event.name}`);
+      return null;
     case "exit":
       return { exit: event.code };
   }
@@ -68,4 +72,10 @@ export const androidEngine: Engine = {
     );
     return finished(0);
   },
+
+  open: async (uri) => {
+    const result = await commands.engineOpen(uri);
+    if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+  },
+  openLabel: "Abrir",
 };

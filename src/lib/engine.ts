@@ -8,6 +8,8 @@ export type JobHandlers = {
   stdout: (line: string) => void;
   /** Linha só para o painel de detalhes: stderr, comando executado, avisos. */
   log: (line: string) => void;
+  /** O arquivo pronto foi publicado num lugar que o usuário vê (só o Android avisa). */
+  saved: (path: string) => void;
 };
 
 export type Job = {
@@ -22,4 +24,7 @@ export type Engine = {
   /** Começa a baixar. Resolve quando já dá para cancelar; o resto chega pelos handlers. */
   download: (input: DownloadInput, handlers: JobHandlers) => Promise<Job>;
   updateYtDlp: (handlers: JobHandlers) => Promise<Job>;
+  /** Abre o resultado: no desktop mostra na pasta; no Android abre no app escolhido. */
+  open: (path: string) => Promise<void>;
+  openLabel: string;
 };

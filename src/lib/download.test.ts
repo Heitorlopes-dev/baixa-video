@@ -177,3 +177,19 @@ describe("readyFile", () => {
     expect(readyFile(run([{ type: "download-start" }, { type: "exit", code: 0 }]))).toBeNull();
   });
 });
+
+describe("saved", () => {
+  test("o lugar publicado substitui o caminho interno e é o que se abre no fim", () => {
+    const s = run([
+      { type: "download-start" },
+      out("ARQUIVO::/data/app/baixando/a.mp3"),
+      { type: "saved", path: "content://media/external/downloads/1000123" },
+      { type: "exit", code: 0 },
+    ]);
+    expect(readyFile(s)).toBe("content://media/external/downloads/1000123");
+  });
+
+  test("fora de um download é ignorado", () => {
+    expect(run([{ type: "saved", path: "content://x" }])).toEqual(initialState);
+  });
+});

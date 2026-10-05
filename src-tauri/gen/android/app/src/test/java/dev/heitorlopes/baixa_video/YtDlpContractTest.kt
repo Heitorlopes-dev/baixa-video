@@ -26,6 +26,7 @@ class YtDlpContractTest {
         assertMatches("event-line-stderr.json", LineEvent("ERROR: [youtube] abc: Video unavailable", STDERR))
         assertMatches("event-exit.json", ExitEvent(0))
         assertMatches("event-exit-canceled.json", ExitEvent(null))
+        assertMatches("event-saved.json", SavedEvent("content://media/external/downloads/1000123", "Me at the zoo.mp3"))
     }
 
     @Test
@@ -42,5 +43,14 @@ class YtDlpContractTest {
         assertEquals("download-1", request.id)
         assertEquals("https://www.youtube.com/watch?v=jNQXAC9IVRw", request.url)
         assertEquals(listOf("--newline", "-f", "ba/b", "-x", "--audio-format", "mp3"), request.args)
+    }
+
+    @Test
+    fun pedidosDeCancelarEAbrir() {
+        assertEquals("download-1", mapper.readValue(file("cancel-request.json"), CancelArgs::class.java).id)
+        assertEquals(
+            "content://media/external/downloads/1000123",
+            mapper.readValue(file("open-request.json"), OpenArgs::class.java).uri,
+        )
     }
 }

@@ -4,8 +4,12 @@ import type { JobHandlers } from "../engine";
 import { engineErrorMessage, routeEvent } from "./android";
 
 function collect() {
-  const seen: { stdout: string[]; log: string[] } = { stdout: [], log: [] };
-  const handlers: JobHandlers = { stdout: (l) => seen.stdout.push(l), log: (l) => seen.log.push(l) };
+  const seen: { stdout: string[]; log: string[]; saved: string[] } = { stdout: [], log: [], saved: [] };
+  const handlers: JobHandlers = {
+    stdout: (l) => seen.stdout.push(l),
+    log: (l) => seen.log.push(l),
+    saved: (p) => seen.saved.push(p),
+  };
   return { seen, handlers };
 }
 
@@ -14,7 +18,7 @@ describe("routeEvent", () => {
     const { seen, handlers } = collect();
     expect(routeEvent({ kind: "line", stream: "stdout", text: "[download]  45.3% of 1MiB" }, handlers)).toBeNull();
     expect(routeEvent({ kind: "line", stream: "stderr", text: "ERROR: indisponível" }, handlers)).toBeNull();
-    expect(seen).toEqual({ stdout: ["[download]  45.3% of 1MiB"], log: ["ERROR: indisponível"] });
+    expect(seen).toEqual({ stdout: ["[download]  45.3% of 1MiB"], log: ["ERROR: indisponível"], saved: [] });
   });
 
   test("o fim devolve o código, inclusive nulo (cancelado)", () => {
@@ -25,7 +29,21 @@ describe("routeEvent", () => {
       { kind: "exit", code: null },
     ];
     expect(events.map((e) => routeEvent(e, handlers))).toEqual([{ exit: 0 }, { exit: 1 }, { exit: null }]);
-    expect(seen).toEqual({ stdout: [], log: [] });
+    expect(seen).toEqual({ stdout: [], log: [], saved: [] });
+  });
+});
+
+describe("routeEvent: arquivo salvo", () => {
+  test("entrega o endereço publicado e registra o nome no log", () => {
+    const { seen, handlers } = collect();
+    expect(
+      routeEvent({ kind: "saved", uri: "content://media/external/downloads/1", name: "a.mp3" }, handlers),
+    ).toBeNull();
+    expect(seen).toEqual({
+      stdout: [],
+      log: ["salvo em Downloads/BaixaVideo: a.mp3"],
+      saved: ["content://media/external/downloads/1"],
+    });
   });
 });
 

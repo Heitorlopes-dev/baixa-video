@@ -1,7 +1,7 @@
 //! Motor do Android: implementa os comandos de src/engine.rs chamando o plugin
 //! Kotlin YtDlpPlugin (youtubedl-android). Tudo que volta do Kotlin é validado em
 //! modo estrito; o formato de cada mensagem está em contracts/android/.
-use crate::engine::{CancelReply, DownloadRequest, EngineError, EngineEvent, UpdateResult, VersionReply};
+use crate::engine::{CancelReply, CancelRequest, DownloadRequest, EngineError, EngineEvent, OpenRequest, UpdateResult, VersionReply};
 use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -16,11 +16,6 @@ struct YtDlp(PluginHandle<Wry>);
 struct StartPayload {
     request: DownloadRequest,
     on_event: Channel<EngineEvent>,
-}
-
-#[derive(Serialize)]
-struct CancelPayload {
-    id: String,
 }
 
 fn call<T: DeserializeOwned>(app: &AppHandle, command: &str, payload: impl Serialize) -> Result<T, EngineError> {
@@ -39,7 +34,7 @@ pub fn start(app: &AppHandle, request: DownloadRequest, on_event: Channel<Engine
 }
 
 pub fn cancel(app: &AppHandle, id: String) -> Result<bool, EngineError> {
-    call::<CancelReply>(app, "cancel", CancelPayload { id }).map(|r| r.cancelled)
+    call::<CancelReply>(app, "cancel", CancelRequest { id }).map(|r| r.cancelled)
 }
 
 pub fn update(app: &AppHandle) -> Result<UpdateResult, EngineError> {
@@ -48,6 +43,10 @@ pub fn update(app: &AppHandle) -> Result<UpdateResult, EngineError> {
 
 pub fn version(app: &AppHandle) -> Result<String, EngineError> {
     call::<VersionReply>(app, "version", ()).map(|r| r.version)
+}
+
+pub fn open(app: &AppHandle, uri: String) -> Result<(), EngineError> {
+    call::<IgnoredAny>(app, "open", OpenRequest { uri }).map(|_| ())
 }
 
 pub fn init_plugin() -> TauriPlugin<Wry> {

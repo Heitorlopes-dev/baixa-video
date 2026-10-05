@@ -1,7 +1,16 @@
 package dev.heitorlopes.baixa_video
 
+import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.ContentValues
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import android.webkit.WebView
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -12,6 +21,7 @@ import app.tauri.plugin.Plugin
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import java.io.File
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 
@@ -41,12 +51,21 @@ class CancelArgs {
     lateinit var id: String
 }
 
+@InvokeArg
+class OpenArgs {
+    lateinit var uri: String
+}
+
 class LineEvent(val text: String, val stream: String) {
     val kind = "line"
 }
 
 class ExitEvent(val code: Int?) {
     val kind = "exit"
+}
+
+class SavedEvent(val uri: String, val name: String) {
+    val kind = "saved"
 }
 
 class VersionReply(val version: String)
@@ -91,9 +110,45 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun currentVersion(): String = YoutubeDL.getInstance().version(activity.application) ?: "desconhecida"
 
-    /** Pasta interna do app por enquanto; a pasta Downloads pública entra na Fase 3. */
-    private fun downloadDir(): String =
-        (activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.filesDir).absolutePath
+    /** Onde o yt-dlp baixa: pasta interna do app. No fim o arquivo é copiado para Downloads/BaixaVideo. */
+    private fun workDir(): String =
+        (activity.getExternalFilesDir("baixando") ?: File(activity.filesDir, "baixando")).also { it.mkdirs() }.absolutePath
+
+    /** Cache do yt-dlp: guarda a solução do desafio do YouTube entre um vídeo e outro. */
+    private fun cacheDir(): String = File(activity.cacheDir, "yt-dlp").also { it.mkdirs() }.absolutePath
+
+    /**
+     * Copia o arquivo para Downloads/BaixaVideo pelo MediaStore (Android 10+, sem permissão)
+     * e apaga a cópia interna. Nome repetido o próprio Android renomeia.
+     */
+    private fun publish(file: File): Uri {
+        val resolver = activity.contentResolver
+        val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: "application/octet-stream"
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, file.name)
+            put(MediaStore.Downloads.MIME_TYPE, mime)
+            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/BaixaVideo")
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: throw IllegalStateException("o Android não criou o arquivo em Downloads")
+        resolver.openOutputStream(uri).use { out ->
+            requireNotNull(out) { "sem acesso ao arquivo em Downloads" }
+            file.inputStream().use { it.copyTo(out) }
+        }
+        resolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
+        file.delete()
+        return uri
+    }
+
+    /** Android 13+: pede uma vez a permissão de notificação. O download segue mesmo se negar. */
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
+    }
 
     @Command
     fun version(invoke: Invoke) = background(invoke) {
@@ -112,13 +167,30 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(StartArgs::class.java)
         val request = args.request
         val events = args.onEvent
+        askNotificationPermission()
         background(invoke) {
             invoke.resolve()
+            val app = activity.application
+            DownloadService.start(app)
+            val finalPath = File(workDir(), "${request.id}.caminho")
             val code: Int? = try {
-                val ytdlp = YoutubeDLRequest(request.url).addCommands(listOf("-P", downloadDir()) + request.args)
-                YoutubeDL.getInstance().execute(ytdlp, request.id) { _, _, line ->
+                val ytdlp = YoutubeDLRequest(request.url)
+                    .addOption("--cache-dir", cacheDir())
+                    .addCommands(
+                        listOf("-P", workDir(), "--print-to-file", "after_move:%(filepath)s", finalPath.absolutePath) +
+                            request.args,
+                    )
+                val exit = YoutubeDL.getInstance().execute(ytdlp, request.id) { progress, _, line ->
                     events.sendObject(LineEvent(line, STDOUT))
+                    DownloadService.progress(app, progress)
                 }.exitCode
+                if (exit == 0) {
+                    val file = File(finalPath.readLines().last { it.isNotBlank() })
+                    val uri = publish(file)
+                    events.sendObject(SavedEvent(uri.toString(), file.name))
+                    DownloadService.finished(app, file.name, uri)
+                }
+                exit
             } catch (e: YoutubeDL.CanceledException) {
                 null
             } catch (e: Exception) {
@@ -127,6 +199,9 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
                     events.sendObject(LineEvent(it, STDERR))
                 }
                 1
+            } finally {
+                finalPath.delete()
+                DownloadService.stop(app)
             }
             events.sendObject(ExitEvent(code))
         }
@@ -136,5 +211,21 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
     fun cancel(invoke: Invoke) {
         val args = invoke.parseArgs(CancelArgs::class.java)
         invoke.resolveObject(CancelReply(YoutubeDL.getInstance().destroyProcessById(args.id)))
+    }
+
+    /** Abre o arquivo baixado no app que a pessoa escolher, com leitura liberada só para ele. */
+    @Command
+    fun open(invoke: Invoke) {
+        val args = invoke.parseArgs(OpenArgs::class.java)
+        val uri = Uri.parse(args.uri)
+        val view = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, activity.contentResolver.getType(uri))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        try {
+            activity.startActivity(Intent.createChooser(view, "Abrir com"))
+            invoke.resolve()
+        } catch (e: ActivityNotFoundException) {
+            invoke.reject("nenhum app instalado abre esse tipo de arquivo")
+        }
     }
 }
