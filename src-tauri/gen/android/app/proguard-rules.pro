@@ -28,3 +28,8 @@
 # youtubedl-android: carrega Python, ffmpeg e QuickJS e usa Jackson internamente.
 -keep class com.yausername.** { *; }
 -dontwarn com.yausername.**
+# A youtubedl-android descompacta o Python e o ffmpeg com a Commons Compress, que registra
+# as classes de campo extra do ZIP por reflexão. Sem isto a release fecha ao abrir
+# ("class ... is not a concrete class" no ExtraFieldUtils); o build de debug não otimiza
+# e esconde o problema.
+-keep class org.apache.commons.compress.archivers.zip.** { *; }
