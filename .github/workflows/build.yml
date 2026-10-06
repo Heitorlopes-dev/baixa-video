@@ -136,6 +136,20 @@ jobs:
           cache: gradle
           cache-dependency-path: src-tauri/gen/android/**/*.gradle*
 
+      # Falha cedo e com motivo claro se o arquivo ou a senha dos secrets não baterem,
+      # em vez do erro genérico do Gradle no fim do build. O resumo do arquivo não revela
+      # nada da chave e serve para comparar com o arquivo original.
+      - name: Confere a chave de assinatura
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "arquivo montado: $(stat -c %s "$ANDROID_KEYSTORE_PATH") bytes, sha256 $(sha256sum "$ANDROID_KEYSTORE_PATH" | cut -d' ' -f1)"
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storetype PKCS12 -storepass:env ANDROID_KEYSTORE_PASSWORD -alias baixa-video > /dev/null; then
+            echo "::error::a senha (ANDROID_KEYSTORE_PASSWORD) não abre o arquivo (ANDROID_KEYSTORE_BASE64): confira os dois secrets"
+            exit 1
+          fi
+          echo "a senha do secret abre a chave baixa-video"
+
       # v4: a v3 tentava instalar o pacote "tools", que não existe mais nas ferramentas atuais.
       - uses: android-actions/setup-android@v4
         with:
