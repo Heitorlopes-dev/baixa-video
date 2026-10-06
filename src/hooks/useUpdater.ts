@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -5,6 +6,7 @@ import { check, type Update } from "@tauri-apps/plugin-updater";
 import { commands } from "../bindings";
 import { engineErrorMessage } from "../lib/engines/android";
 import { isNewer } from "../lib/version";
+import { isStaleYtDlp } from "../lib/ytdlp";
 import { usePlatform } from "./usePlatform";
 
 /**
@@ -76,4 +78,33 @@ export function useAndroidUpdate() {
       return apkUrl && isNewer(version, currentVersion) ? { version, currentVersion, url: apkUrl } : null;
     },
   });
+}
+
+/**
+ * Android: o yt-dlp que vem no APK é o da youtubedl-android, com meses de atraso, e o
+ * YouTube recusa o download no meio (403) até ele ser atualizado. Ao abrir, se a versão
+ * instalada estiver velha, dispara uma vez a mesma atualização do botão, assim que a tela
+ * estiver livre. Na primeira abertura sempre atualiza; depois, só a cada 90 dias parado.
+ */
+export function useAutoUpdateYtDlp(busy: boolean, updateYtDlp: () => Promise<void>) {
+  const platform = usePlatform();
+  const { data: stale } = useQuery({
+    queryKey: ["ytdlp-stale"],
+    enabled: platform === "android",
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const result = await commands.engineVersion();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return isStaleYtDlp(result.data, new Date());
+    },
+  });
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (!stale || busy || fired.current) return;
+    fired.current = true;
+    void updateYtDlp();
+  }, [stale, busy, updateYtDlp]);
 }

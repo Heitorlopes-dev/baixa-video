@@ -12,7 +12,7 @@ import { Button } from "./components/ui/Button";
 import { useDownload } from "./hooks/useDownload";
 import { useManagedDestination } from "./hooks/useDestination";
 import { useEngine } from "./hooks/usePlatform";
-import { useCanUpdateYtDlp } from "./hooks/useUpdater";
+import { useAutoUpdateYtDlp, useCanUpdateYtDlp } from "./hooks/useUpdater";
 import { type FormatId, isValidUrl } from "./lib/ytdlp";
 
 export function App() {
@@ -23,6 +23,7 @@ export function App() {
   const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(engine);
   const managed = useManagedDestination(engine);
   const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
+  useAutoUpdateYtDlp(busy, updateYtDlp);
   const { data: defaultDir = "" } = useQuery({
     queryKey: ["download-dir"],
     queryFn: () => downloadDir(),

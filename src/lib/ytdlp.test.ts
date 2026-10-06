@@ -6,6 +6,7 @@ import {
   FORMAT_IDS,
   buildArgs,
   coreArgs,
+  isStaleYtDlp,
   isValidUrl,
   parseFilePath,
   parseFormatCount,
@@ -174,5 +175,28 @@ describe("coreArgs", () => {
       const desktop = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app" });
       for (const arg of coreArgs(format)) expect(desktop).toContain(arg);
     }
+  });
+});
+
+describe("isStaleYtDlp", () => {
+  const today = new Date("2026-10-06T12:00:00Z");
+
+  test("o yt-dlp que vem no APK (2025.11.12) está velho", () => {
+    expect(isStaleYtDlp("2025.11.12", today)).toBe(true);
+  });
+
+  test("até 90 dias não precisa atualizar", () => {
+    expect(isStaleYtDlp("2026.08.19", today)).toBe(false);
+    expect(isStaleYtDlp("2026.07.08", today)).toBe(false);
+    expect(isStaleYtDlp("2026.07.07", today)).toBe(true);
+  });
+
+  test("versão nightly, com sufixo depois da data, conta pela data", () => {
+    expect(isStaleYtDlp("2026.09.30.232425", today)).toBe(false);
+  });
+
+  test("versão que não dá para ler conta como velha", () => {
+    expect(isStaleYtDlp("desconhecida", today)).toBe(true);
+    expect(isStaleYtDlp("", today)).toBe(true);
   });
 });

@@ -190,3 +190,20 @@ export function isValidUrl(value: string): boolean {
     return false;
   }
 }
+
+/** Mesmo prazo do aviso do próprio yt-dlp ("older than 90 days"). */
+export const STALE_AFTER_DAYS = 90;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * A versão do yt-dlp é a data do lançamento (2026.08.19, ou 2026.09.30.232425 na nightly).
+ * Velha: lançada há mais de STALE_AFTER_DAYS dias, ou ilegível (melhor tentar atualizar).
+ */
+export function isStaleYtDlp(version: string, now: Date): boolean {
+  const match = /^(\d{4})\.(\d{2})\.(\d{2})/.exec(version);
+  if (!match) return true;
+  const [, year, month, day] = match.map(Number);
+  const released = Date.UTC(year, month - 1, day);
+  return Math.floor((now.getTime() - released) / DAY_MS) > STALE_AFTER_DAYS;
+}
