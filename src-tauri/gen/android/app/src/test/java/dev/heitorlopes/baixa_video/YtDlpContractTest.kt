@@ -43,6 +43,8 @@ class YtDlpContractTest {
         assertMatches("latest-release-sem-apk.json", LatestReleaseReply("0.3.0", null))
         assertMatches("destination.json", DestinationReply("Movies/Baixa", true))
         assertMatches("destination-default.json", DestinationReply(DEFAULT_DESTINATION, false))
+        assertMatches("login.json", LoginReply(true))
+        assertMatches("login-signed-out.json", LoginReply(false))
     }
 
     @Test

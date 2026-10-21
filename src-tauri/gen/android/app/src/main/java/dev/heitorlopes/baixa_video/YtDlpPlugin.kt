@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.webkit.CookieManager
 import android.webkit.MimeTypeMap
 import android.webkit.WebView
 import androidx.activity.result.ActivityResult
@@ -91,6 +92,8 @@ class LatestReleaseReply(val version: String, val apkUrl: String?)
 
 class DestinationReply(val label: String, val custom: Boolean)
 
+class LoginReply(val signedIn: Boolean)
+
 private const val FOLDER_KEY = "pasta"
 
 class VersionReply(val version: String)
@@ -167,6 +170,15 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
         val binary = File(activity.applicationInfo.nativeLibraryDir, "libqjsng.so")
         return if (binary.exists()) listOf("--js-runtimes", "quickjs:${binary.absolutePath}") else emptyList()
     }
+
+    /**
+     * Cookies do Instagram gravados depois da tela de entrada, na pasta interna do app (nenhum
+     * outro app lê). O yt-dlp lê e regrava este arquivo em todo download enquanto ele existir.
+     */
+    private fun cookiesFile(): File = File(activity.filesDir, "instagram-cookies.txt")
+
+    private fun cookieArgs(): List<String> =
+        cookiesFile().takeIf { it.exists() }?.let { listOf("--cookies", it.absolutePath) } ?: emptyList()
 
     /** Cache do yt-dlp: guarda a solução do desafio do YouTube entre um vídeo e outro. */
     private fun cacheDir(): String = File(activity.cacheDir, "yt-dlp").also { it.mkdirs() }.absolutePath
@@ -260,6 +272,7 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
                     .addCommands(
                         listOf("-P", workDir(), "--print-to-file", "after_move:%(filepath)s", finalPath.absolutePath) +
                             quickJsNgArgs() +
+                            cookieArgs() +
                             request.args,
                     )
                 val exit = YoutubeDL.getInstance().execute(ytdlp, request.id) { progress, _, line ->
@@ -369,5 +382,43 @@ class YtDlpPlugin(private val activity: Activity) : Plugin(activity) {
             prefs.edit().putString(FOLDER_KEY, uri.toString()).apply()
         }
         invoke.resolveObject(currentDestination())
+    }
+
+    @Command
+    fun loginStatus(invoke: Invoke) {
+        invoke.resolveObject(LoginReply(cookiesFile().exists()))
+    }
+
+    /** Abre a tela de entrada do Instagram (LoginActivity). */
+    @Command
+    fun login(invoke: Invoke) {
+        startActivityForResult(invoke, Intent(activity, LoginActivity::class.java), "loginFinished")
+    }
+
+    /**
+     * Na volta da tela de entrada, grava os cookies se a sessão existe. Quem voltou sem
+     * entrar fica como estava.
+     */
+    @ActivityCallback
+    fun loginFinished(invoke: Invoke, result: ActivityResult) {
+        val header = CookieManager.getInstance().getCookie(INSTAGRAM_URL)
+        if (hasInstagramSession(header)) {
+            val expiresAt = System.currentTimeMillis() / 1000 + COOKIE_LIFETIME_SECONDS
+            cookiesFile().writeText(netscapeCookies(header, expiresAt))
+        }
+        invoke.resolveObject(LoginReply(cookiesFile().exists()))
+    }
+
+    /** Apaga o arquivo e os cookies da WebView: a próxima entrada pede usuário e senha de novo. */
+    @Command
+    fun logout(invoke: Invoke) {
+        cookiesFile().delete()
+        activity.runOnUiThread {
+            val cookies = CookieManager.getInstance()
+            cookies.removeAllCookies {
+                cookies.flush()
+                invoke.resolveObject(LoginReply(cookiesFile().exists()))
+            }
+        }
     }
 }

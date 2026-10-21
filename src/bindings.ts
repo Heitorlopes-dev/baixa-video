@@ -39,6 +39,12 @@ export const commands = {
 	engineDestination: () => typedError<Destination, EngineError>(__TAURI_INVOKE("engine_destination")),
 	/**  Abre o seletor de pastas do Android; cancelar mantém o destino atual. */
 	enginePickFolder: () => typedError<Destination, EngineError>(__TAURI_INVOKE("engine_pick_folder")),
+	/**  Se há login do Instagram guardado (Android). */
+	engineLoginStatus: () => typedError<Login, EngineError>(__TAURI_INVOKE("engine_login_status")),
+	/**  Abre a tela de entrada do Instagram e espera a pessoa entrar ou voltar (Android). */
+	engineLogin: () => typedError<Login, EngineError>(__TAURI_INVOKE("engine_login")),
+	/**  Apaga o login guardado (Android). */
+	engineLogout: () => typedError<Login, EngineError>(__TAURI_INVOKE("engine_logout")),
 };
 
 /* Types */
@@ -76,6 +82,14 @@ export type EngineEvent = { kind: "line"; text: string; stream: Stream } |
 export type LatestRelease = {
 	version: string,
 	apkUrl: string | null,
+};
+
+/**
+ *  Se há login guardado para sites que pedem conta (Android: Instagram, feito na tela de
+ *  entrada do app). Com login, todo download leva os cookies dele.
+ */
+export type Login = {
+	signedIn: boolean,
 };
 
 export type Platform = "desktop" | "android";

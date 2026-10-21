@@ -4,6 +4,7 @@ import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { DownloadActions } from "./components/download/DownloadActions";
 import { DownloadForm } from "./components/download/DownloadForm";
+import { LoginField } from "./components/download/LoginField";
 import { LogPanel } from "./components/download/LogPanel";
 import { ProgressBar } from "./components/download/ProgressBar";
 import { AndroidUpdateBanner } from "./components/AndroidUpdateBanner";
@@ -11,17 +12,20 @@ import { UpdateBanner } from "./components/UpdateBanner";
 import { Button } from "./components/ui/Button";
 import { useDownload } from "./hooks/useDownload";
 import { useManagedDestination } from "./hooks/useDestination";
+import { useManagedLogin } from "./hooks/useLogin";
 import { useEngine } from "./hooks/usePlatform";
 import { useAutoUpdateYtDlp, useCanUpdateYtDlp } from "./hooks/useUpdater";
-import { type FormatId, isValidUrl } from "./lib/ytdlp";
+import { type BrowserId, type FormatId, isValidUrl, needsLogin } from "./lib/ytdlp";
 
 export function App() {
   const [url, setUrl] = useState("");
   const [chosenDir, setChosenDir] = useState<string | null>(null);
   const engine = useEngine();
   const [format, setFormat] = useState<FormatId>("melhor");
+  const [browser, setBrowser] = useState<BrowserId>("nenhum");
   const { state, ready, busy, start, cancel, updateYtDlp, toggleLog } = useDownload(engine);
   const managed = useManagedDestination(engine);
+  const managedLogin = useManagedLogin(engine);
   const { data: canUpdateYtDlp = true } = useCanUpdateYtDlp();
   useAutoUpdateYtDlp(busy, updateYtDlp);
   const { data: defaultDir = "" } = useQuery({
@@ -45,7 +49,7 @@ export function App() {
   }
 
   function startDownload() {
-    if (canStart) void start({ url, dir, format });
+    if (canStart) void start({ url, dir, format, browser });
   }
 
   return (
@@ -72,6 +76,16 @@ export function App() {
         disabled={busy}
         onSubmit={startDownload}
       />
+
+      {engine && (
+        <LoginField
+          managed={managedLogin}
+          browser={browser}
+          onBrowserChange={setBrowser}
+          disabled={busy}
+          needed={state.status === "erro" && needsLogin(state.log)}
+        />
+      )}
 
       <DownloadActions
         state={state}

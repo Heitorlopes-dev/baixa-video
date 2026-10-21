@@ -25,13 +25,31 @@ export type FormatId = keyof typeof FORMATS;
 export const FORMAT_IDS = Object.keys(FORMATS) as FormatId[];
 
 /**
+ * Desktop: navegadores de onde o yt-dlp lê o login (--cookies-from-browser), para
+ * sites que pedem conta, como o Instagram. "nenhum" baixa sem login.
+ */
+export const BROWSERS = {
+  nenhum: "Não usar",
+  firefox: "Firefox",
+  chrome: "Chrome",
+  edge: "Edge",
+  brave: "Brave",
+  opera: "Opera",
+  vivaldi: "Vivaldi",
+} as const;
+
+export type BrowserId = keyof typeof BROWSERS;
+
+export const BROWSER_IDS = Object.keys(BROWSERS) as BrowserId[];
+
+/**
  * Toda chamada ao yt-dlp tem exatamente este número de argumentos.
  * A permissão do sidecar (src-tauri/capabilities/default.json, gerada por
  * scripts/gen-capability.ts a partir daqui) valida argumento por posição e
  * descarta em silêncio o que passar da lista, então chamadas mais curtas são
  * completadas com PAD (uma flag inofensiva que pode repetir).
  */
-export const ARGS_LEN = 23;
+export const ARGS_LEN = 25;
 const PAD = "--no-playlist";
 
 /** Únicas flags que o app passa ao yt-dlp. Qualquer outra (ex.: --exec) é recusada pela permissão. */
@@ -42,6 +60,7 @@ export const ALLOWED_FLAGS = [
   "--windows-filenames",
   "--ffmpeg-location",
   "--js-runtimes",
+  "--cookies-from-browser",
   "-P",
   "-o",
   "--print",
@@ -67,6 +86,8 @@ export type DownloadInput = {
   format: FormatId;
   /** Pasta onde estão ffmpeg, ffprobe e deno (a mesma do executável do app). */
   binDir: string;
+  /** Navegador de onde vem o login; "nenhum" baixa sem login. */
+  browser: BrowserId;
 };
 
 function padded(args: string[], length: number): string[] {
@@ -92,13 +113,14 @@ export function coreArgs(format: FormatId): string[] {
  * Desktop: o yt-dlp roda como sidecar e precisa saber onde estão ffmpeg e deno
  * e onde salvar. O preenchimento fica antes de `--`: depois dele o yt-dlp trata tudo como URL.
  */
-export function buildArgs({ url, dir, format, binDir }: DownloadInput): string[] {
+export function buildArgs({ url, dir, format, binDir, browser }: DownloadInput): string[] {
   const head = [
     "--windows-filenames",
     "--ffmpeg-location",
     binDir,
     "--js-runtimes",
     `deno:${binDir}`,
+    ...(browser === "nenhum" ? [] : ["--cookies-from-browser", browser]),
     "-P",
     dir,
     ...coreArgs(format),
@@ -180,6 +202,15 @@ const LINE_READERS: readonly ((line: string) => YtDlpLine | null)[] = [
 
 export function parseLine(line: string): YtDlpLine | null {
   return LINE_READERS.reduce<YtDlpLine | null>((found, read) => found ?? read(line), null);
+}
+
+/**
+ * O site recusou por falta de login? O erro do yt-dlp diz "login required" ou manda usar
+ * cookies (Instagram: "rate-limit reached or login required. Use --cookies, ..."). Só
+ * "--cookies" não serve: a linha do comando, no log, já tem o --cookies-from-browser.
+ */
+export function needsLogin(log: readonly string[]): boolean {
+  return log.some((line) => /login required|use --cookies/i.test(line));
 }
 
 export function isValidUrl(value: string): boolean {

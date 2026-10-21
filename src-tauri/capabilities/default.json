@@ -25,73 +25,79 @@
           "sidecar": true,
           "args": [
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             },
             {
-              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
+            },
+            {
+              "validator": "^(?:--newline|--no-playlist|--no-quiet|--windows-filenames|--ffmpeg-location|--js-runtimes|--cookies-from-browser|-P|-o|--print|-f|-S|--merge-output-format|-x|--audio-format|--audio-quality|-U|--|[^-].*)$"
             }
           ]
         }

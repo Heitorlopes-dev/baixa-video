@@ -19,4 +19,5 @@ export const desktopEngine: Engine = {
   open: (path) => revealItemInDir(path),
   openLabel: "Abrir pasta",
   destination: { kind: "path" },
+  login: { kind: "browser" },
 };

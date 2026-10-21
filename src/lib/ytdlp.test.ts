@@ -8,6 +8,7 @@ import {
   coreArgs,
   isStaleYtDlp,
   isValidUrl,
+  needsLogin,
   parseFilePath,
   parseFormatCount,
   parseLine,
@@ -23,6 +24,7 @@ describe("buildArgs", () => {
       dir: "C:\\Users\\x\\Videos",
       format: "720p",
       binDir: "C:\\app",
+      browser: "nenhum",
     });
     expect(args).toContain("--no-playlist");
     expect(args[args.indexOf("--ffmpeg-location") + 1]).toBe("C:\\app");
@@ -35,15 +37,22 @@ describe("buildArgs", () => {
   });
 
   test("mp3: extrai áudio e não pede merge", () => {
-    const args = buildArgs({ url: "https://x.y/z", dir: "/tmp", format: "mp3", binDir: "/app" });
+    const args = buildArgs({ url: "https://x.y/z", dir: "/tmp", format: "mp3", binDir: "/app", browser: "nenhum" });
     expect(args).toContain("-x");
     expect(args).toContain("mp3");
     expect(args).not.toContain("--merge-output-format");
   });
 
+  test("login do navegador: --cookies-from-browser com o navegador escolhido; sem login, nada", () => {
+    const base = { url: "https://www.instagram.com/reel/abc/", dir: "/tmp", format: "melhor", binDir: "/app" } as const;
+    const withLogin = buildArgs({ ...base, browser: "firefox" });
+    expect(withLogin[withLogin.indexOf("--cookies-from-browser") + 1]).toBe("firefox");
+    expect(buildArgs({ ...base, browser: "nenhum" })).not.toContain("--cookies-from-browser");
+  });
+
   test("a URL vem logo depois de `--`, nunca é cortada pelo preenchimento", () => {
     for (const format of FORMAT_IDS) {
-      const args = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app" });
+      const args = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app", browser: "nenhum" });
       expect(args[args.indexOf("--") + 1]).toBe("https://x.y/z");
     }
   });
@@ -64,11 +73,20 @@ describe("permissão posicional do sidecar (capabilities/default.json)", () => {
     expect(capability).toEqual(JSON.parse(capabilityJson()));
   });
 
+  // Todo formato com e sem login: o login soma 2 argumentos, e a chamada mais longa tem de caber.
   const calls = [
-    ...FORMAT_IDS.map((format) => ({
-      name: `download ${format}`,
-      args: buildArgs({ url: "https://www.youtube.com/watch?v=1", dir: "C:\\Vídeos", format, binDir: "C:\\app" }),
-    })),
+    ...FORMAT_IDS.flatMap((format) =>
+      (["nenhum", "firefox"] as const).map((browser) => ({
+        name: `download ${format} (login: ${browser})`,
+        args: buildArgs({
+          url: "https://www.youtube.com/watch?v=1",
+          dir: "C:\\Vídeos",
+          format,
+          binDir: "C:\\app",
+          browser,
+        }),
+      })),
+    ),
     { name: "update", args: updateArgs() },
   ];
 
@@ -159,6 +177,30 @@ describe("parseLine", () => {
   });
 });
 
+describe("needsLogin", () => {
+  test("reconhece os erros de falta de login do yt-dlp", () => {
+    expect(
+      needsLogin([
+        "ERROR: [Instagram] DQx1: Requested content is not available, rate-limit reached or login required. Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (instagram) to provide account credentials.",
+      ]),
+    ).toBe(true);
+    expect(
+      needsLogin([
+        "ERROR: [Instagram] DQx1: Instagram sent an empty media response. Check if this post is accessible in your browser without being logged-in. If it is not, then use --cookies-from-browser or --cookies for the authentication.",
+      ]),
+    ).toBe(true);
+  });
+
+  test("a linha do comando com --cookies-from-browser e outros erros não contam", () => {
+    expect(
+      needsLogin([
+        "> yt-dlp --cookies-from-browser firefox -P /tmp -- https://www.instagram.com/reel/abc/",
+        "ERROR: [youtube] abc: Video unavailable",
+      ]),
+    ).toBe(false);
+  });
+});
+
 describe("coreArgs", () => {
   test("o comum a qualquer plataforma: saída por linha, nome, caminho final e formato, sem caminhos do desktop", () => {
     const args = coreArgs("mp3");
@@ -172,7 +214,7 @@ describe("coreArgs", () => {
 
   test("o desktop é o comum mais os extras, sem perder nada", () => {
     for (const format of FORMAT_IDS) {
-      const desktop = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app" });
+      const desktop = buildArgs({ url: "https://x.y/z", dir: "/tmp", format, binDir: "/app", browser: "nenhum" });
       for (const arg of coreArgs(format)) expect(desktop).toContain(arg);
     }
   });

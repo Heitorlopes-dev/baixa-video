@@ -3,7 +3,7 @@
 //! modo estrito; o formato de cada mensagem está em contracts/android/.
 use crate::engine::{
     update_endpoint, CancelReply, CancelRequest, CheckUpdateRequest, Destination, DownloadRequest, EngineError, EngineEvent,
-    LatestRelease,
+    LatestRelease, Login,
     OpenRequest, SharedText, UpdateResult, VersionReply,
 };
 use serde::de::{DeserializeOwned, IgnoredAny};
@@ -66,6 +66,19 @@ pub fn destination(app: &AppHandle) -> Result<Destination, EngineError> {
 /// Espera a pessoa escolher (ou cancelar) no seletor do Android.
 pub fn pick_folder(app: &AppHandle) -> Result<Destination, EngineError> {
     call(app, "pickFolder", ())
+}
+
+pub fn login_status(app: &AppHandle) -> Result<Login, EngineError> {
+    call(app, "loginStatus", ())
+}
+
+/// Espera a pessoa entrar no Instagram (ou voltar) na tela de entrada.
+pub fn login(app: &AppHandle) -> Result<Login, EngineError> {
+    call(app, "login", ())
+}
+
+pub fn logout(app: &AppHandle) -> Result<Login, EngineError> {
+    call(app, "logout", ())
 }
 
 pub fn latest_release(app: &AppHandle) -> Result<LatestRelease, EngineError> {

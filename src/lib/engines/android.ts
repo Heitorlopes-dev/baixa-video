@@ -92,6 +92,24 @@ export const androidEngine: Engine = {
       return result.data;
     },
   },
+  login: {
+    kind: "managed",
+    current: async () => {
+      const result = await commands.engineLoginStatus();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return result.data;
+    },
+    signIn: async () => {
+      const result = await commands.engineLogin();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return result.data;
+    },
+    signOut: async () => {
+      const result = await commands.engineLogout();
+      if (result.status === "error") throw new Error(engineErrorMessage(result.error));
+      return result.data;
+    },
+  },
 
   watchShared: async (onUrl) => {
     const channel = new Channel<SharedText>(({ text }) => {

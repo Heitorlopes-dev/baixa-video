@@ -60,6 +60,14 @@ pub struct Destination {
     pub custom: bool,
 }
 
+/// Se há login guardado para sites que pedem conta (Android: Instagram, feito na tela de
+/// entrada do app). Com login, todo download leva os cookies dele.
+#[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Login {
+    pub signed_in: bool,
+}
+
 /// Texto que outro app compartilhou com este (Android: menu "Compartilhar").
 #[derive(Deserialize, Serialize, Type, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -203,6 +211,27 @@ pub async fn engine_pick_folder(app: AppHandle) -> Result<Destination, EngineErr
     backend::pick_folder(&app)
 }
 
+/// Se há login do Instagram guardado (Android).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_login_status(app: AppHandle) -> Result<Login, EngineError> {
+    backend::login_status(&app)
+}
+
+/// Abre a tela de entrada do Instagram e espera a pessoa entrar ou voltar (Android).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_login(app: AppHandle) -> Result<Login, EngineError> {
+    backend::login(&app)
+}
+
+/// Apaga o login guardado (Android).
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_logout(app: AppHandle) -> Result<Login, EngineError> {
+    backend::logout(&app)
+}
+
 /// Última versão publicada (Android: o atualizador do Tauri não existe lá).
 #[tauri::command]
 #[specta::specta]
@@ -252,6 +281,15 @@ mod backend {
     pub fn pick_folder(_: &AppHandle) -> Result<super::Destination, EngineError> {
         Err(EngineError::Unsupported)
     }
+    pub fn login_status(_: &AppHandle) -> Result<super::Login, EngineError> {
+        Err(EngineError::Unsupported)
+    }
+    pub fn login(_: &AppHandle) -> Result<super::Login, EngineError> {
+        Err(EngineError::Unsupported)
+    }
+    pub fn logout(_: &AppHandle) -> Result<super::Login, EngineError> {
+        Err(EngineError::Unsupported)
+    }
 }
 
 #[cfg(test)]
@@ -287,6 +325,8 @@ mod tests {
         round_trip::<LatestRelease>("latest-release-sem-apk.json");
         round_trip::<Destination>("destination.json");
         round_trip::<Destination>("destination-default.json");
+        round_trip::<Login>("login.json");
+        round_trip::<Login>("login-signed-out.json");
         round_trip::<CancelRequest>("cancel-request.json");
         round_trip::<OpenRequest>("open-request.json");
         round_trip::<UpdateResult>("update-done.json");
@@ -309,6 +349,7 @@ mod tests {
         assert!(serde_json::from_value::<EngineEvent>(with_extra("event-exit.json")).is_err());
         assert!(serde_json::from_value::<LatestRelease>(with_extra("latest-release.json")).is_err());
         assert!(serde_json::from_value::<Destination>(with_extra("destination.json")).is_err());
+        assert!(serde_json::from_value::<Login>(with_extra("login.json")).is_err());
     }
 
     #[test]

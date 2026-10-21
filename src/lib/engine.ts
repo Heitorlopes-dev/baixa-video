@@ -1,8 +1,8 @@
 // O que a tela precisa de um motor de download, em qualquer plataforma.
 // Desktop: yt-dlp como sidecar (engines/desktop.ts). Android: plugin Kotlin pela
 // ponte tipada (engines/android.ts). O gancho useDownload só conhece esta interface.
-import type { Destination } from "../bindings";
-import type { FormatId } from "./ytdlp";
+import type { Destination, Login } from "../bindings";
+import type { BrowserId, FormatId } from "./ytdlp";
 
 export type JobHandlers = {
   /** Linha da saída padrão do yt-dlp: alimenta o progresso. */
@@ -19,7 +19,7 @@ export type Job = {
   cancel: () => Promise<void>;
 };
 
-export type DownloadInput = { url: string; dir: string; format: FormatId };
+export type DownloadInput = { url: string; dir: string; format: FormatId; browser: BrowserId };
 
 export type Engine = {
   /** Começa a baixar. Resolve quando já dá para cancelar; o resto chega pelos handlers. */
@@ -35,6 +35,19 @@ export type Engine = {
   destination:
     | { kind: "path" }
     | { kind: "managed"; current: () => Promise<Destination>; pick: () => Promise<Destination> };
+  /**
+   * Login para sites que pedem conta (Instagram). "browser": a tela escolhe um navegador
+   * e o yt-dlp lê o login dele (desktop). "managed": o motor guarda o login feito numa
+   * tela de entrada própria e o usa em todo download (Android).
+   */
+  login:
+    | { kind: "browser" }
+    | {
+        kind: "managed";
+        current: () => Promise<Login>;
+        signIn: () => Promise<Login>;
+        signOut: () => Promise<Login>;
+      };
   /** Avisa quando outro app compartilha um link com este (só no Android). */
   watchShared?: (onUrl: (url: string) => void) => Promise<void>;
 };

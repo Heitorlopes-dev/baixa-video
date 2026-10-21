@@ -64,6 +64,21 @@ Android, um plugin Kotlin sobre a [youtubedl-android](https://github.com/yausern
    `https://github.com/Heitorlopes-dev/baixa-video` e confirme. Ele confere as
    Releases, avisa da versão nova e instala o APK.
 
+**Instagram e outros sites que pedem conta**
+
+O Instagram quase sempre recusa o download sem login ("login required"). Quando o
+erro for esse, o app avisa embaixo do campo de login.
+
+- **Windows e Linux:** entre no Instagram pelo navegador e escolha esse navegador em
+  **Usar login do navegador**. O yt-dlp lê o login que já está lá. No Windows, use o
+  Firefox: o Chrome protege os cookies dele e não deixa outro programa ler.
+- **Android:** toque em **Entrar no Instagram**, entre com usuário e senha na página
+  que abre e espere ela fechar sozinha. O login fica guardado só no app (em
+  `instagram-cookies.txt`, na pasta interna dele) e vale para todo download.
+  **Sair** apaga esse login.
+
+Se puder, use uma conta secundária: o Instagram pode bloquear uma conta que baixa muito.
+
 ## Para quem vai mexer no código
 
 ```bash
